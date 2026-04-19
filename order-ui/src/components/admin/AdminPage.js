@@ -90,6 +90,19 @@ function AdminPage() {
     }
   }
 
+  const handleUpdateOrder = async (orderId, newDescription) => {
+    const description = (newDescription || '').trim()
+    if (!description) {
+      return
+    }
+    try {
+      await orderApi.updateOrder(user, orderId, { description })
+      handleGetOrders()
+    } catch (error) {
+      handleLogError(error)
+    }
+  }
+
   const handleCreateOrder = async () => {
     let description = orderDescription.trim()
     if (!description) {
@@ -135,6 +148,7 @@ function AdminPage() {
         orderTextSearch={orderTextSearch}
         handleCreateOrder={handleCreateOrder}
         handleDeleteOrder={handleDeleteOrder}
+        handleUpdateOrder={handleUpdateOrder}
         handleSearchOrder={handleSearchOrder}
         handleInputChange={handleInputChange}
       />

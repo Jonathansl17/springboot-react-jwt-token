@@ -2,7 +2,13 @@ import React from 'react'
 import { Grid, Form, Button, Input, Table } from 'semantic-ui-react'
 import OrderForm from '../misc/OrderForm'
 
-function OrderTable({ orders, orderDescription, orderTextSearch, handleInputChange, handleCreateOrder, handleDeleteOrder, handleSearchOrder }) {
+function OrderTable({ orders, orderDescription, orderTextSearch, handleInputChange, handleCreateOrder, handleDeleteOrder, handleUpdateOrder, handleSearchOrder }) {
+  const onEditClick = (order) => {
+    const next = window.prompt('Edit description', order.description)
+    if (next !== null && next.trim() !== '' && next !== order.description && handleUpdateOrder) {
+      handleUpdateOrder(order.id, next)
+    }
+  }
   let orderList
   if (orders.length === 0) {
     orderList = (
@@ -15,6 +21,13 @@ function OrderTable({ orders, orderDescription, orderTextSearch, handleInputChan
       return (
         <Table.Row key={order.id}>
           <Table.Cell collapsing>
+            <Button
+              circular
+              color='blue'
+              size='small'
+              icon='edit'
+              onClick={() => onEditClick(order)}
+            />
             <Button
               circular
               color='red'

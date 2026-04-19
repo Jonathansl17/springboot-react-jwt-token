@@ -4,6 +4,7 @@ import com.ivanfranchin.orderapi.order.Order;
 import com.ivanfranchin.orderapi.user.User;
 import com.ivanfranchin.orderapi.rest.dto.CreateOrderRequest;
 import com.ivanfranchin.orderapi.rest.dto.OrderDto;
+import com.ivanfranchin.orderapi.rest.dto.UpdateOrderRequest;
 import com.ivanfranchin.orderapi.security.CustomUserDetails;
 import com.ivanfranchin.orderapi.order.OrderService;
 import com.ivanfranchin.orderapi.user.UserService;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -55,6 +57,15 @@ public class OrderController {
         Order order = Order.from(createOrderRequest);
         order.setId(UUID.randomUUID().toString());
         order.setUser(user);
+        return OrderDto.from(orderService.saveOrder(order));
+    }
+
+    @Operation(security = {@SecurityRequirement(name = BEARER_KEY_SECURITY_SCHEME)})
+    @PutMapping("/{id}")
+    public OrderDto updateOrder(@PathVariable UUID id,
+                                @Valid @RequestBody UpdateOrderRequest updateOrderRequest) {
+        Order order = orderService.validateAndGetOrder(id.toString());
+        order.setDescription(updateOrderRequest.description());
         return OrderDto.from(orderService.saveOrder(order));
     }
 

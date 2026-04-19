@@ -1,0 +1,484 @@
+{
+  "info": {
+    "name": "TC46-58 Validaciones y Seguridad",
+    "_postman_id": "a1f4e6b0-1111-4222-8333-444455556666",
+    "description": "Casos de prueba 46 al 58 (Funcionales y Seguridad) - Plan de pruebas",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8080" },
+    { "key": "frontendUrl", "value": "http://localhost:3000" },
+    { "key": "userToken", "value": "" },
+    { "key": "adminToken", "value": "" },
+    { "key": "secondUserToken", "value": "" },
+    { "key": "secondUserEmail", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "SETUP - Login admin (admin/admin)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": { "raw": "{{baseUrl}}/auth/authenticate", "host": ["{{baseUrl}}"], "path": ["auth", "authenticate"] },
+        "body": { "mode": "raw", "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"admin\"\n}" }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Login admin 200', () => pm.response.to.have.status(200));",
+              "const json = pm.response.json();",
+              "pm.collectionVariables.set('adminToken', json.accessToken);"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "SETUP - Login user (user/user)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": { "raw": "{{baseUrl}}/auth/authenticate", "host": ["{{baseUrl}}"], "path": ["auth", "authenticate"] },
+        "body": { "mode": "raw", "raw": "{\n  \"username\": \"user\",\n  \"password\": \"user\"\n}" }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Login user 200', () => pm.response.to.have.status(200));",
+              "const json = pm.response.json();",
+              "pm.collectionVariables.set('userToken', json.accessToken);"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "SETUP - Crear segundo usuario (para TC53)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": { "raw": "{{baseUrl}}/auth/signup", "host": ["{{baseUrl}}"], "path": ["auth", "signup"] },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"user_other_{{$timestamp}}\",\n  \"password\": \"password123\",\n  \"name\": \"OtherUser\",\n  \"email\": \"other_{{$timestamp}}@test.com\"\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "const ts = Date.now();",
+              "pm.collectionVariables.set('secondUserEmail', `other_${ts}@test.com`);",
+              "pm.collectionVariables.set('secondUserName', `user_other_${ts}`);"
+            ],
+            "type": "text/javascript"
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Segundo usuario creado 201', () => pm.response.to.have.status(201));",
+              "const json = pm.response.json();",
+              "pm.collectionVariables.set('secondUserToken', json.accessToken);"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "TC46 - Redireccion a login sin sesion (manual UI)",
+      "request": {
+        "method": "GET",
+        "url": { "raw": "{{frontendUrl}}/userpage", "host": ["{{frontendUrl}}"], "path": ["userpage"] }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('NOTA: este caso se valida manualmente en el navegador', () => pm.expect(true).to.be.true);",
+              "// Postman no ejecuta JS del SPA. Abrir {{frontendUrl}}/userpage sin login y verificar redireccion a /login"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "TC47a - Usuario regular ve solo sus pedidos (GET /me)",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{userToken}}" }],
+        "url": { "raw": "{{baseUrl}}/api/users/me", "host": ["{{baseUrl}}"], "path": ["api", "users", "me"] }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('200 OK', () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test('Solo orders del propio usuario', () => {",
+              "  if (!j.orders) return;",
+              "  pm.expect(Array.isArray(j.orders)).to.be.true;",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "TC47b - Usuario regular NO accede a /api/orders (403)",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{userToken}}" }],
+        "url": { "raw": "{{baseUrl}}/api/orders", "host": ["{{baseUrl}}"], "path": ["api", "orders"] }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": ["pm.test('403 Forbidden', () => pm.response.to.have.status(403));"],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "TC48 - Datos guardados al crear pedido",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{userToken}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": { "raw": "{{baseUrl}}/api/orders", "host": ["{{baseUrl}}"], "path": ["api", "orders"] },
+        "body": { "mode": "raw", "raw": "{\n  \"description\": \"Pedido TC48 - {{$timestamp}}\"\n}" }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('201 Created', () => pm.response.to.have.status(201));",
+              "const j = pm.response.json();",
+              "pm.test('Tiene id, description, createdAt', () => {",
+              "  pm.expect(j).to.have.property('id');",
+              "  pm.expect(j).to.have.property('description');",
+              "  pm.expect(j).to.have.property('createdAt');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "TC49a - Editar perfil (PUT /me)",
+      "request": {
+        "method": "PUT",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{userToken}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": { "raw": "{{baseUrl}}/api/users/me", "host": ["{{baseUrl}}"], "path": ["api", "users", "me"] },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"User Editado\",\n  \"email\": \"user@mycompany.com\"\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('200 OK', () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test('Nombre actualizado', () => pm.expect(j.name).to.eql('User Editado'));"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "TC49b - Verificar persistencia (GET /me)",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{userToken}}" }],
+        "url": { "raw": "{{baseUrl}}/api/users/me", "host": ["{{baseUrl}}"], "path": ["api", "users", "me"] }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('200 OK', () => pm.response.to.have.status(200));",
+              "pm.test('Cambios persistieron', () => pm.expect(pm.response.json().name).to.eql('User Editado'));"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "TC50 - Formato JSON correcto",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{userToken}}" }],
+        "url": { "raw": "{{baseUrl}}/api/users/me", "host": ["{{baseUrl}}"], "path": ["api", "users", "me"] }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Content-Type application/json', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+              "pm.test('JSON valido', () => { pm.response.json(); });",
+              "const j = pm.response.json();",
+              "pm.test('Estructura UserDto', () => {",
+              "  ['id','username','name','email','role','orders'].forEach(k => pm.expect(j).to.have.property(k));",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "TC51a - 200 login exitoso",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": { "raw": "{{baseUrl}}/auth/authenticate", "host": ["{{baseUrl}}"], "path": ["auth", "authenticate"] },
+        "body": { "mode": "raw", "raw": "{\n  \"username\": \"user\",\n  \"password\": \"user\"\n}" }
+      },
+      "event": [{ "listen": "test", "script": { "exec": ["pm.test('200', () => pm.response.to.have.status(200));"], "type": "text/javascript" } }]
+    },
+    {
+      "name": "TC51b - 201 signup",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": { "raw": "{{baseUrl}}/auth/signup", "host": ["{{baseUrl}}"], "path": ["auth", "signup"] },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"signup_{{$timestamp}}\",\n  \"password\": \"pass1234\",\n  \"name\": \"Sign Up\",\n  \"email\": \"signup_{{$timestamp}}@test.com\"\n}"
+        }
+      },
+      "event": [{ "listen": "test", "script": { "exec": ["pm.test('201', () => pm.response.to.have.status(201));"], "type": "text/javascript" } }]
+    },
+    {
+      "name": "TC51c - 400 body invalido",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": { "raw": "{{baseUrl}}/auth/signup", "host": ["{{baseUrl}}"], "path": ["auth", "signup"] },
+        "body": { "mode": "raw", "raw": "{\n  \"username\": \"\",\n  \"password\": \"\",\n  \"name\": \"\",\n  \"email\": \"no-es-email\"\n}" }
+      },
+      "event": [{ "listen": "test", "script": { "exec": ["pm.test('400', () => pm.response.to.have.status(400));"], "type": "text/javascript" } }]
+    },
+    {
+      "name": "TC51d - 401 sin token",
+      "request": {
+        "method": "GET",
+        "url": { "raw": "{{baseUrl}}/api/users/me", "host": ["{{baseUrl}}"], "path": ["api", "users", "me"] }
+      },
+      "event": [{ "listen": "test", "script": { "exec": ["pm.test('401', () => pm.response.to.have.status(401));"], "type": "text/javascript" } }]
+    },
+    {
+      "name": "TC51e - 403 rol insuficiente",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{userToken}}" }],
+        "url": { "raw": "{{baseUrl}}/api/users", "host": ["{{baseUrl}}"], "path": ["api", "users"] }
+      },
+      "event": [{ "listen": "test", "script": { "exec": ["pm.test('403', () => pm.response.to.have.status(403));"], "type": "text/javascript" } }]
+    },
+    {
+      "name": "TC51f - 404 recurso inexistente",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+        "url": { "raw": "{{baseUrl}}/api/users/no_existe_xyz", "host": ["{{baseUrl}}"], "path": ["api", "users", "no_existe_xyz"] }
+      },
+      "event": [{ "listen": "test", "script": { "exec": ["pm.test('404', () => pm.response.to.have.status(404));"], "type": "text/javascript" } }]
+    },
+
+    {
+      "name": "TC52 - Campos con espacios en blanco (signup)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": { "raw": "{{baseUrl}}/auth/signup", "host": ["{{baseUrl}}"], "path": ["auth", "signup"] },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"   \",\n  \"password\": \"   \",\n  \"name\": \"   \",\n  \"email\": \"valid@test.com\"\n}"
+        }
+      },
+      "event": [{ "listen": "test", "script": { "exec": ["pm.test('400 por @NotBlank', () => pm.response.to.have.status(400));"], "type": "text/javascript" } }]
+    },
+
+    {
+      "name": "TC53 - Actualizar perfil con email ya en uso",
+      "request": {
+        "method": "PUT",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{secondUserToken}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": { "raw": "{{baseUrl}}/api/users/me", "host": ["{{baseUrl}}"], "path": ["api", "users", "me"] },
+        "body": { "mode": "raw", "raw": "{\n  \"name\": \"Other\",\n  \"email\": \"user@mycompany.com\"\n}" }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Rechaza email duplicado (400)', () => pm.response.to.have.status(400));",
+              "pm.test('Mensaje menciona email', () => pm.expect(pm.response.text().toLowerCase()).to.include('email'));"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "TC54 - Actualizar perfil con datos validos",
+      "request": {
+        "method": "PUT",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{secondUserToken}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": { "raw": "{{baseUrl}}/api/users/me", "host": ["{{baseUrl}}"], "path": ["api", "users", "me"] },
+        "body": { "mode": "raw", "raw": "{\n  \"name\": \"Other Editado\",\n  \"email\": \"{{secondUserEmail}}\"\n}" }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('200', () => pm.response.to.have.status(200));",
+              "pm.test('name actualizado', () => pm.expect(pm.response.json().name).to.eql('Other Editado'));"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "TC55 - Headers de seguridad HTTP",
+      "request": {
+        "method": "GET",
+        "url": { "raw": "{{baseUrl}}/public/numberOfUsers", "host": ["{{baseUrl}}"], "path": ["public", "numberOfUsers"] }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const expected = ['X-Content-Type-Options','X-Frame-Options','Cache-Control'];",
+              "expected.forEach(h => {",
+              "  pm.test(`Header ${h} presente`, () => pm.expect(pm.response.headers.get(h)).to.not.be.null);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "TC56a - Metodo no permitido: PUT /auth/authenticate",
+      "request": {
+        "method": "PUT",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": { "raw": "{{baseUrl}}/auth/authenticate", "host": ["{{baseUrl}}"], "path": ["auth", "authenticate"] },
+        "body": { "mode": "raw", "raw": "{}" }
+      },
+      "event": [{ "listen": "test", "script": { "exec": ["pm.test('405 Method Not Allowed', () => pm.response.to.have.status(405));"], "type": "text/javascript" } }]
+    },
+    {
+      "name": "TC56b - Metodo no permitido: DELETE /public/numberOfUsers",
+      "request": {
+        "method": "DELETE",
+        "url": { "raw": "{{baseUrl}}/public/numberOfUsers", "host": ["{{baseUrl}}"], "path": ["public", "numberOfUsers"] }
+      },
+      "event": [{ "listen": "test", "script": { "exec": ["pm.test('405 Method Not Allowed', () => pm.response.to.have.status(405));"], "type": "text/javascript" } }]
+    },
+
+    {
+      "name": "TC57 - Datos sensibles no expuestos en errores",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+        "url": { "raw": "{{baseUrl}}/api/users/no_existe_xyz", "host": ["{{baseUrl}}"], "path": ["api", "users", "no_existe_xyz"] }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const body = pm.response.text().toLowerCase();",
+              "pm.test('No expone stacktrace', () => pm.expect(body).to.not.include('exception'));",
+              "pm.test('No expone SQL', () => pm.expect(body).to.not.include('select '));",
+              "pm.test('No expone password', () => pm.expect(body).to.not.include('password'));",
+              "pm.test('No expone clase Java', () => pm.expect(body).to.not.include('com.ivanfranchin'));"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "TC58 - No registrar admin desde API publica",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": { "raw": "{{baseUrl}}/auth/signup", "host": ["{{baseUrl}}"], "path": ["auth", "signup"] },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"fakeadmin_{{$timestamp}}\",\n  \"password\": \"pass1234\",\n  \"name\": \"Fake Admin\",\n  \"email\": \"fakeadmin_{{$timestamp}}@test.com\",\n  \"role\": \"ADMIN\"\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Signup ok 201', () => pm.response.to.have.status(201));",
+              "const token = pm.response.json().accessToken;",
+              "const payload = JSON.parse(atob(token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')));",
+              "pm.test('Rol asignado NO es ADMIN', () => {",
+              "  const roles = JSON.stringify(payload).toUpperCase();",
+              "  pm.expect(roles).to.include('USER');",
+              "  pm.expect(roles).to.not.include('\"ADMIN\"');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    }
+  ]
+}

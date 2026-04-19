@@ -12,7 +12,9 @@ export const orderApi = {
   getOrders,
   deleteOrder,
   createOrder,
-  getUserMe
+  updateOrder,
+  getUserMe,
+  updateUserMe
 }
 
 function authenticate(username, password) {
@@ -70,9 +72,27 @@ function createOrder(user, order) {
   })
 }
 
+function updateOrder(user, orderId, order) {
+  return instance.put(`/api/orders/${orderId}`, order, {
+    headers: {
+      'Content-type': 'application/json',
+      'Authorization': bearerAuth(user)
+    }
+  })
+}
+
 function getUserMe(user) {
   return instance.get('/api/users/me', {
     headers: { 'Authorization': bearerAuth(user) }
+  })
+}
+
+function updateUserMe(user, profile) {
+  return instance.put('/api/users/me', profile, {
+    headers: {
+      'Content-type': 'application/json',
+      'Authorization': bearerAuth(user)
+    }
   })
 }
 

@@ -6,7 +6,7 @@ import OrderTable from './OrderTable'
 function AdminTab(props) {
   const { handleInputChange } = props
   const { isUsersLoading, users, userUsernameSearch, handleDeleteUser, handleSearchUser } = props
-  const { isOrdersLoading, orders, orderDescription, orderTextSearch, handleCreateOrder, handleDeleteOrder, handleSearchOrder } = props
+  const { isOrdersLoading, orders, orderDescription, orderTextSearch, handleCreateOrder, handleDeleteOrder, handleUpdateOrder, handleSearchOrder } = props
 
   const panes = [
     {
@@ -34,6 +34,7 @@ function AdminTab(props) {
             handleInputChange={handleInputChange}
             handleCreateOrder={handleCreateOrder}
             handleDeleteOrder={handleDeleteOrder}
+            handleUpdateOrder={handleUpdateOrder}
             handleSearchOrder={handleSearchOrder}
           />
         </Tab.Pane>
