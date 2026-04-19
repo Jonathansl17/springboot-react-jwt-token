@@ -40,7 +40,7 @@ Cada caso debe quedar documentado con:
 | Para qué | Herramienta |
 |---|---|
 | UI / redirecciones (TC46) | **Navegador** (modo incógnito) |
-| API, validaciones, seguridad (TC47–TC58) | **Postman** con la colección `postman/TC46-58 Validaciones y Seguridad.postman_collection.json` |
+| API, validaciones, seguridad (TC47–TC58) | **Postman** con la colección `postman/Jonathan-TC46-58.postman_collection.json` |
 | Inspección de headers (TC55) | Postman o `curl -I` |
 | Decodificar JWT (TC58) | `jwt.io` o el script incluido en la colección |
 | Carga / estrés (TC59–TC60) | **k6** (`sudo pacman -S k6` o `docker pull grafana/k6`) |
@@ -92,13 +92,13 @@ estado original, detén el backend, borra el volumen de postgres
 ### TC47 · Usuario regular solo ve sus pedidos
 
 - **Tipo:** Funcional / Autorización
-- **Herramienta:** Postman (colección `TC46-58 Validaciones y Seguridad.postman_collection.json`).
+- **Herramienta:** Postman (colección `Jonathan-TC46-58.postman_collection.json`).
 - **Precondiciones:**
   - Colección importada en Postman (`File → Import`, solo la primera vez).
   - SETUPs ejecutados (generan `userToken` y `adminToken`).
 - **Datos de entrada:** `userToken` válido.
 - **Pasos:**
-  1. Abrir la colección **"TC46-58 Validaciones y Seguridad"** en la sidebar de Postman.
+  1. Abrir la colección **"Jonathan - TC46-58"** en la sidebar de Postman.
   2. Ejecutar los 3 requests que empiezan con **"SETUP -"** en orden.
   3. Ejecutar `TC47a - GET /api/users/me`.
   4. Ejecutar `TC47b - GET /api/orders`.
