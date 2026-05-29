@@ -1,0 +1,592 @@
+{
+  "info": {
+    "_postman_id": "tc16-30-pedidos-dereck",
+    "name": "TC16-30 Pedidos - Dereck",
+    "description": "Casos de prueba TC-16 al TC-28. Nota: GET/PUT/DELETE /api/orders requiere ADMIN. El USER ve sus ordenes via GET /api/users/me.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:8080" },
+    { "key": "user_token", "value": "" },
+    { "key": "user2_token", "value": "" },
+    { "key": "admin_token", "value": "" },
+    { "key": "order_id", "value": "" },
+    { "key": "user2_order_id", "value": "" },
+    { "key": "expired_token", "value": "PEGAR_TOKEN_EXPIRADO_AQUI" }
+  ],
+  "item": [
+    {
+      "name": "SETUP",
+      "item": [
+        {
+          "name": "SETUP - Login user (user/user)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"SETUP: Login de usuario principal exitoso\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "var json = pm.response.json();",
+                  "pm.collectionVariables.set(\"user_token\", json.accessToken);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"username\": \"user\",\n  \"password\": \"user\"\n}" },
+            "url": { "raw": "{{base_url}}/auth/authenticate", "host": ["{{base_url}}"], "path": ["auth", "authenticate"] }
+          },
+          "response": []
+        },
+        {
+          "name": "SETUP - Login admin (admin/admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"SETUP: Login de administrador exitoso\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "var json = pm.response.json();",
+                  "pm.collectionVariables.set(\"admin_token\", json.accessToken);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"admin\"\n}" },
+            "url": { "raw": "{{base_url}}/auth/authenticate", "host": ["{{base_url}}"], "path": ["auth", "authenticate"] }
+          },
+          "response": []
+        },
+        {
+          "name": "SETUP - Registrar user2 (si no existe)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"SETUP: user2 disponible para pruebas cruzadas\", function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([201, 400, 409]);",
+                  "});",
+                  "if (pm.response.code === 201) {",
+                  "    var json = pm.response.json();",
+                  "    pm.collectionVariables.set(\"user2_token\", json.accessToken);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"username\": \"user1\",\n  \"password\": \"user1\",\n  \"name\": \"User Uno\",\n  \"email\": \"user1@test.com\"\n}" },
+            "url": { "raw": "{{base_url}}/auth/signup", "host": ["{{base_url}}"], "path": ["auth", "signup"] }
+          },
+          "response": []
+        },
+        {
+          "name": "SETUP - Login user2 (user1/user1)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"SETUP: Login de usuario secundario exitoso\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "var json = pm.response.json();",
+                  "pm.collectionVariables.set(\"user2_token\", json.accessToken);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"username\": \"user1\",\n  \"password\": \"user1\"\n}" },
+            "url": { "raw": "{{base_url}}/auth/authenticate", "host": ["{{base_url}}"], "path": ["auth", "authenticate"] }
+          },
+          "response": []
+        },
+        {
+          "name": "SETUP - Crear orden de user (para TC-22, 23, 25)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"SETUP: Orden de user creada para pruebas de edicion/eliminacion\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "var json = pm.response.json();",
+                  "pm.collectionVariables.set(\"order_id\", json.id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{user_token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"description\": \"Orden setup para pruebas TC-22 al TC-25\"\n}" },
+            "url": { "raw": "{{base_url}}/api/orders", "host": ["{{base_url}}"], "path": ["api", "orders"] }
+          },
+          "response": []
+        },
+        {
+          "name": "SETUP - Crear orden de user2 (para TC-26)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"SETUP: Orden de user2 creada para prueba TC-26\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "var json = pm.response.json();",
+                  "pm.collectionVariables.set(\"user2_order_id\", json.id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{user2_token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"description\": \"Orden de user2 para prueba TC-26\"\n}" },
+            "url": { "raw": "{{base_url}}/api/orders", "host": ["{{base_url}}"], "path": ["api", "orders"] }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Funcionales",
+      "item": [
+        {
+          "name": "TC-16: Crear pedido con datos completos",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Estatus 201: Pedido creado exitosamente en la base de datos\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "pm.test(\"Retorna los campos correctos del pedido creado (id, description, createdAt, user)\", function () {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('id');",
+                  "    pm.expect(json).to.have.property('description');",
+                  "    pm.expect(json).to.have.property('createdAt');",
+                  "    pm.expect(json).to.have.property('user');",
+                  "    pm.expect(json.description).to.equal(\"Comprar laptop nueva\");",
+                  "    pm.expect(json.id).to.be.a('string').and.not.empty;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{user_token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"description\": \"Comprar laptop nueva\"\n}" },
+            "url": { "raw": "{{base_url}}/api/orders", "host": ["{{base_url}}"], "path": ["api", "orders"] }
+          },
+          "response": []
+        },
+        {
+          "name": "TC-17: Crear pedido con campos vacios",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Estatus 400: Pedido rechazado por descripcion vacia\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "pm.test(\"Validacion de Interfaz: El sistema indica que la descripcion es obligatoria\", function () {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.exception).to.include(\"MethodArgumentNotValidException\");",
+                  "    pm.expect(json.errors).to.be.an('array').and.not.empty;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{user_token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"description\": \"\"\n}" },
+            "url": { "raw": "{{base_url}}/api/orders", "host": ["{{base_url}}"], "path": ["api", "orders"] }
+          },
+          "response": []
+        },
+        {
+          "name": "TC-18: Crear pedido sin autenticacion",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Estatus 401: Pedido rechazado al no haber sesion activa\", function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});",
+                  "pm.test(\"Control de Acceso: El sistema impide crear pedidos sin token de autenticacion\", function () {",
+                  "    pm.expect(pm.response.code).to.equal(401);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"description\": \"Este pedido no deberia crearse\"\n}" },
+            "url": { "raw": "{{base_url}}/api/orders", "host": ["{{base_url}}"], "path": ["api", "orders"] }
+          },
+          "response": []
+        },
+        {
+          "name": "TC-19: Ver lista de pedidos propios",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// El usuario ve sus ordenes a traves de GET /api/users/me (no de GET /api/orders que requiere ADMIN)",
+                  "pm.test(\"Estatus 200: Informacion del usuario con sus pedidos obtenida exitosamente\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Retorna las ordenes del usuario logueado\", function () {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('orders');",
+                  "    pm.expect(json.orders).to.be.an('array');",
+                  "    pm.expect(json.orders.length).to.be.above(0);",
+                  "    pm.expect(json.username).to.equal('user');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{user_token}}" }],
+            "url": { "raw": "{{base_url}}/api/users/me", "host": ["{{base_url}}"], "path": ["api", "users", "me"] }
+          },
+          "response": []
+        },
+        {
+          "name": "TC-20: Ver detalle de un pedido propio",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Estatus 200: Detalles de pedidos del usuario disponibles\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Cada pedido contiene los campos id, description y createdAt\", function () {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.orders).to.be.an('array');",
+                  "    pm.expect(json.orders.length).to.be.above(0);",
+                  "    var pedido = json.orders[0];",
+                  "    pm.expect(pedido).to.have.property('id');",
+                  "    pm.expect(pedido).to.have.property('description');",
+                  "    pm.expect(pedido).to.have.property('createdAt');",
+                  "    pm.expect(pedido.id).to.be.a('string').and.not.empty;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{user_token}}" }],
+            "url": { "raw": "{{base_url}}/api/users/me", "host": ["{{base_url}}"], "path": ["api", "users", "me"] }
+          },
+          "response": []
+        },
+        {
+          "name": "TC-21: Intentar ver pedido de otro usuario",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Estatus 200: user2 solo puede ver sus propias ordenes via /api/users/me\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"user2 recibe unicamente sus propias ordenes, no las de otros usuarios\", function () {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.username).to.equal('user1');",
+                  "    pm.expect(json.orders).to.be.an('array');",
+                  "    var tieneOrdenesDeOtro = json.orders.some(function(o) {",
+                  "        return o.user && o.user.username !== 'user1';",
+                  "    });",
+                  "    pm.expect(tieneOrdenesDeOtro).to.be.false;",
+                  "    console.log('OK TC-21: /api/users/me devuelve solo las ordenes del usuario autenticado.');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{user2_token}}" }],
+            "url": { "raw": "{{base_url}}/api/users/me", "host": ["{{base_url}}"], "path": ["api", "users", "me"] }
+          },
+          "response": []
+        },
+        {
+          "name": "TC-22: Editar pedido existente (requiere ADMIN)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// PUT /api/orders/{id} requiere rol ADMIN segun SecurityConfig",
+                  "pm.test(\"Estatus 200: Pedido actualizado exitosamente con token de administrador\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"La descripcion fue actualizada correctamente en la base de datos\", function () {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.description).to.equal(\"Descripcion actualizada TC-22\");",
+                  "    pm.expect(json).to.have.property('id');",
+                  "    pm.expect(json).to.have.property('createdAt');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"description\": \"Descripcion actualizada TC-22\"\n}" },
+            "url": { "raw": "{{base_url}}/api/orders/{{order_id}}", "host": ["{{base_url}}"], "path": ["api", "orders", "{{order_id}}"] }
+          },
+          "response": []
+        },
+        {
+          "name": "TC-23: Editar pedido con datos invalidos (requiere ADMIN)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Estatus 400: Edicion rechazada por descripcion vacia\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "pm.test(\"Validacion de campos: El sistema no permite actualizar con datos vacios\", function () {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.exception).to.include(\"MethodArgumentNotValidException\");",
+                  "    pm.expect(json.errors).to.be.an('array').and.not.empty;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"description\": \"\"\n}" },
+            "url": { "raw": "{{base_url}}/api/orders/{{order_id}}", "host": ["{{base_url}}"], "path": ["api", "orders", "{{order_id}}"] }
+          },
+          "response": []
+        },
+        {
+          "name": "TC-25: Eliminar pedido propio (requiere ADMIN)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// DELETE /api/orders/{id} requiere rol ADMIN segun SecurityConfig",
+                  "pm.test(\"Estatus 200: Pedido eliminado exitosamente con token de administrador\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"La respuesta retorna los datos del pedido eliminado\", function () {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('id');",
+                  "    pm.expect(json).to.have.property('description');",
+                  "    pm.expect(json).to.have.property('createdAt');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{admin_token}}" }],
+            "url": { "raw": "{{base_url}}/api/orders/{{order_id}}", "host": ["{{base_url}}"], "path": ["api", "orders", "{{order_id}}"] }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Seguridad",
+      "item": [
+        {
+          "name": "TC-24: Editar pedido de otro usuario (USER no puede editar)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// El rol USER no tiene acceso a PUT /api/orders/{id} - solo ADMIN puede editar",
+                  "pm.test(\"Estatus 403: El rol USER no tiene permiso para editar pedidos via API\", function () {",
+                  "    pm.response.to.have.status(403);",
+                  "});",
+                  "pm.test(\"Control de acceso por rol: El sistema restringe correctamente la edicion a rol ADMIN\", function () {",
+                  "    pm.expect(pm.response.code).to.equal(403);",
+                  "    console.log('OK TC-24: El backend devuelve 403 cuando un USER intenta editar pedidos. Solo ADMIN puede usar PUT /api/orders/{id}');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{user2_token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"description\": \"Intento de edicion con rol USER - debe dar 403\"\n}" },
+            "url": { "raw": "{{base_url}}/api/orders/{{order_id}}", "host": ["{{base_url}}"], "path": ["api", "orders", "{{order_id}}"] }
+          },
+          "response": []
+        },
+        {
+          "name": "TC-26: Eliminar pedido de otro usuario (USER no puede eliminar)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// El rol USER no tiene acceso a DELETE /api/orders/{id} - solo ADMIN puede eliminar",
+                  "pm.test(\"Estatus 403: El rol USER no tiene permiso para eliminar pedidos via API\", function () {",
+                  "    pm.response.to.have.status(403);",
+                  "});",
+                  "pm.test(\"Control de acceso por rol: El sistema restringe correctamente la eliminacion a rol ADMIN\", function () {",
+                  "    pm.expect(pm.response.code).to.equal(403);",
+                  "    console.log('OK TC-26: El backend devuelve 403 cuando un USER intenta eliminar pedidos. Solo ADMIN puede usar DELETE /api/orders/{id}');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{user_token}}" }],
+            "url": { "raw": "{{base_url}}/api/orders/{{user2_order_id}}", "host": ["{{base_url}}"], "path": ["api", "orders", "{{user2_order_id}}"] }
+          },
+          "response": []
+        },
+        {
+          "name": "TC-27: Intentar XSS en descripcion de pedido",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Estatus 201: El sistema acepta el pedido con etiquetas HTML sin sanitizar\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "pm.test(\"Hallazgo de seguridad: El contenido XSS se almacena como texto literal sin sanitizacion\", function () {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('description');",
+                  "    pm.expect(json.description).to.include(\"<script>\");",
+                  "    console.log(\"HALLAZGO TC-27: El sistema almacena etiquetas <script> sin sanitizar. Riesgo XSS si el frontend no escapa el HTML.\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{user_token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"description\": \"<script>alert('hackeado')</script>\"\n}" },
+            "url": { "raw": "{{base_url}}/api/orders", "host": ["{{base_url}}"], "path": ["api", "orders"] }
+          },
+          "response": []
+        },
+        {
+          "name": "TC-28: Enviar token expirado",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Estatus 401: Solicitud rechazada por token expirado\", function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});",
+                  "pm.test(\"Control de seguridad JWT: El sistema invalida correctamente los tokens expirados\", function () {",
+                  "    pm.expect(pm.response.code).to.equal(401);",
+                  "    console.log(\"OK TC-28: El backend rechaza tokens expirados con 401. Ver logs del servidor: Request to parse expired JWT...\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{expired_token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"description\": \"Este pedido no deberia crearse con token expirado\"\n}" },
+            "url": { "raw": "{{base_url}}/api/orders", "host": ["{{base_url}}"], "path": ["api", "orders"] }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

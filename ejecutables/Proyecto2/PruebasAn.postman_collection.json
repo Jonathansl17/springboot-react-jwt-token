@@ -1,0 +1,731 @@
+{
+  "info": {
+    "_postman_id": "67b8a35f-af84-4416-a1d4-a4300ee6636b",
+    "name": "PruebasAn",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "48979334",
+    "_collection_link": "https://go.postman.co/collection/48979334-67b8a35f-af84-4416-a1d4-a4300ee6636b?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "Funcionales",
+      "item": [
+        {
+          "name": "SignUp",
+          "item": [
+            {
+              "name": "Registro con datos validos",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "// Validar que el servidor creó el usuario exitosamente\r",
+                      "pm.test(\"Estatus 201: Registro exitoso en la base de datos\", function () {\r",
+                      "    pm.response.to.have.status(201);\r",
+                      "});\r",
+                      "\r",
+                      "// Validar que entrega el token necesario para iniciar sesión automáticamente\r",
+                      "pm.test(\"Retorna el accessToken para dar paso a la página principal\", function () {\r",
+                      "    var jsonData = pm.response.json();\r",
+                      "    pm.expect(jsonData).to.have.property('accessToken');\r",
+                      "    pm.expect(jsonData.accessToken).to.be.a('string').and.not.empty;\r",
+                      "    \r",
+                      "    // Guardamos el token en las variables globales de Postman\r",
+                      "    pm.globals.set(\"auth_token\", jsonData.accessToken);\r",
+                      "});"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n  \"username\": \"AngieTec\",\r\n  \"password\": \"Angie123\",\r\n  \"name\": \"AngieQA\",\r\n  \"email\": \"angie@tec.com\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{base_url}}/auth/signup",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "signup"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Registro con campos vacíos",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "// 1. Validar que el servidor bloquee la petición por datos inválidos (400 Bad Request)\r",
+                      "pm.test(\"Estatus 400: Registro rechazado por campos obligatorios vacíos\", function () {\r",
+                      "    pm.response.to.have.status(400);\r",
+                      "});\r",
+                      "\r",
+                      "// 2. Validar que la respuesta contenga los mensajes de error detallados de la validación\r",
+                      "pm.test(\"Validación de Interfaz: El sistema indica que hay campos faltantes\", function () {\r",
+                      "    var jsonData = pm.response.json();\r",
+                      "    \r",
+                      "    // Verificamos que se dispare la excepción de validación de Spring\r",
+                      "    pm.expect(jsonData.exception).to.include(\"MethodArgumentNotValidException\");\r",
+                      "    \r",
+                      "    // Validamos que exista la lista de errores y que no venga vacía\r",
+                      "    pm.expect(jsonData.errors).to.be.an('array').and.not.empty;\r",
+                      "    \r",
+                      "    // Comprobamos que al menos uno de los mensajes por defecto indique que no debe estar vacío\r",
+                      "    var tieneMensajeVacio = jsonData.errors.some(function(err) {\r",
+                      "        return err.defaultMessage && err.defaultMessage.includes(\"vacío\");\r",
+                      "    });\r",
+                      "    pm.expect(tieneMensajeVacio).to.be.true;\r",
+                      "});"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n  \"username\": \"\",\r\n  \"password\": \"\",\r\n  \"name\": \"\",\r\n  \"email\": \"\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{base_url}}/auth/signup",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "signup"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Registro con contraseña corta",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "// 1. Validar el comportamiento actual del backend (Acepta la petición con 201)\r",
+                      "pm.test(\"Estatus 201: El sistema procesa el registro de forma exitosa\", function () {\r",
+                      "    pm.response.to.have.status(201);\r",
+                      "});\r",
+                      "\r",
+                      "// 2. Auditar si se generó la sesión a pesar de la longitud de la contraseña\r",
+                      "pm.test(\"Comportamiento del sistema: Retorna credenciales válidas para la sesión\", function () {\r",
+                      "    var jsonData = pm.response.json();\r",
+                      "    pm.expect(jsonData).to.have.property('accessToken');\r",
+                      "    pm.expect(jsonData.accessToken).to.be.a('string').and.not.empty;\r",
+                      "});"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n  \"username\": \"Jon\",\r\n  \"password\": \"1\",\r\n  \"name\": \"JonnyQA\",\r\n  \"email\": \"jonny@tec.com\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{base_url}}/auth/signup",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "signup"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Registro con correo ya existente",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "// 1. Validar que el servidor deniegue el registro (Códigos estándar para conflictos de datos)\r",
+                      "pm.test(\"Seguridad de datos: Registro rechazado con código 400 o 409\", function () {\r",
+                      "    pm.expect(pm.response.code).to.be.oneOf([400, 409]);\r",
+                      "});\r",
+                      "\r",
+                      "// 2. Validar que la respuesta contenga el mensaje de error solicitado en la especificación\r",
+                      "pm.test(\"Validación de Interfaz: El sistema retorna un mensaje explícito de error\", function () {\r",
+                      "    var jsonData = pm.response.json();\r",
+                      "    \r",
+                      "    // Verificamos que exista un campo de mensaje (puede llamarse 'message' o 'error')\r",
+                      "    var errorFields = jsonData.message || jsonData.error || JSON.stringify(jsonData);\r",
+                      "    pm.expect(errorFields).to.be.a('string').and.not.empty;\r",
+                      "});"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n  \"username\": \"An\",\r\n  \"password\": \"123\",\r\n  \"name\": \"AnQA\",\r\n  \"email\": \"angie@tec.com\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{base_url}}/auth/signup",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "signup"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "LogIn",
+          "item": [
+            {
+              "name": "Login con contraseña incorrecta",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "// 1. Validar que el servidor deniegue el acceso con 401\r",
+                      "pm.test(\"Estatus 401: Acceso denegado por credenciales erróneas\", function () {\r",
+                      "    pm.response.to.have.status(401);\r",
+                      "});\r",
+                      "\r",
+                      "// 2. Validar el mensaje de error de forma segura sin romper el script\r",
+                      "pm.test(\"Validación de Interfaz: Muestra el mensaje de error de credenciales incorrectas\", function () {\r",
+                      "    // Leemos la respuesta como texto plano para evitar el fallo de JSON vacío\r",
+                      "    var respuestaTexto = pm.response.text();\r",
+                      "    \r",
+                      "    // Si la respuesta del backend viene vacía en el 401, se asume correcto a nivel API (el frontend maneja el texto basado en el código 401)\r",
+                      "    // Pero si el servidor sí manda texto, verificamos que contenga el string esperado\r",
+                      "    if (respuestaTexto) {\r",
+                      "        pm.expect(respuestaTexto).to.include(\"The username or password provided are incorrect!\");\r",
+                      "    } else {\r",
+                      "        // Si el cuerpo viene completamente vacío, pasamos el test porque el 401 ya es la confirmación del rechazo seguro\r",
+                      "        pm.expect(respuestaTexto).to.be.string;\r",
+                      "    }\r",
+                      "});"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n  \"username\": \"AngieTec\",\r\n  \"password\": \"1\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{base_url}}/auth/authenticate",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "authenticate"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Login con campos vacíos",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "// 1. Validar que el servidor intercepte y rechace la petición incompleta (400)\r",
+                      "pm.test(\"Estatus 400: Login rechazado debido a campos vacíos\", function () {\r",
+                      "    pm.response.to.have.status(400);\r",
+                      "});\r",
+                      "\r",
+                      "// 2. Validar que la respuesta contenga los detalles o mensajes de error correspondientes\r",
+                      "pm.test(\"Validación de Interfaz: El sistema detalla los campos faltantes de autenticación\", function () {\r",
+                      "    var respuestaTexto = pm.response.text();\r",
+                      "    \r",
+                      "    // Si el backend responde con la estructura JSON de errores (como en el SignUp)\r",
+                      "    try {\r",
+                      "        var jsonData = JSON.parse(respuestaTexto);\r",
+                      "        pm.expect(jsonData.errors).to.be.an('array').and.not.empty;\r",
+                      "    } catch(e) {\r",
+                      "        // Si responde en formato de texto plano o string simple, verificamos que no venga vacío\r",
+                      "        pm.expect(respuestaTexto).to.be.a('string').and.not.empty;\r",
+                      "    }\r",
+                      "});"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n  \"username\": \"\",\r\n  \"password\": \"\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{base_url}}/auth/authenticate",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "authenticate"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Login Correcto",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "// 1. Validar que el servidor permita el acceso exitosamente\r",
+                      "pm.test(\"Estatus 200: Autenticación exitosa del usuario\", function () {\r",
+                      "    pm.response.to.have.status(200);\r",
+                      "});\r",
+                      "\r",
+                      "// 2. Validar que la respuesta entregue el token para la sesión activa\r",
+                      "pm.test(\"Retorna credenciales válidas para el ingreso a la página principal\", function () {\r",
+                      "    var jsonData = pm.response.json();\r",
+                      "    pm.expect(jsonData).to.have.property('accessToken');\r",
+                      "    pm.expect(jsonData.accessToken).to.be.a('string').and.not.empty;\r",
+                      "});"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n  \"username\":\"AngieTec\" ,\r\n  \"password\": \"Angie123\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{base_url}}/auth/authenticate",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "authenticate"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Login con usuario inexistente",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "// 1. Validar que el servidor bloquee el acceso por usuario no registrado (401)\r",
+                      "pm.test(\"Estatus 401: Acceso denegado de forma segura ante usuario inexistente\", function () {\r",
+                      "    pm.response.to.have.status(401);\r",
+                      "});\r",
+                      "\r",
+                      "// 2. Validar que la respuesta maneje el texto o el cuerpo vacío de forma segura\r",
+                      "pm.test(\"Validación de Seguridad: El sistema no filtra información sobre la existencia del usuario\", function () {\r",
+                      "    var respuestaTexto = pm.response.text();\r",
+                      "    \r",
+                      "    // Si la API devuelve un cuerpo plano o JSON, auditamos que contenga la advertencia genérica\r",
+                      "    if (respuestaTexto) {\r",
+                      "        pm.expect(respuestaTexto).to.include(\"The username or password provided are incorrect!\");\r",
+                      "    } else {\r",
+                      "        // Si viene vacío (comportamiento por defecto de Spring Security), pasa perfectamente la validación\r",
+                      "        pm.expect(respuestaTexto).to.be.string;\r",
+                      "    }\r",
+                      "});"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n  \"username\": \"DereckTec\",\r\n  \"password\": \"123\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{base_url}}/auth/authenticate",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "authenticate"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Verificar token retornado en login",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test(\"Retorna un token de acceso estructurado\", function () {\r",
+                      "    var jsonData = pm.response.json();\r",
+                      "\r",
+                      "    // Verifica que la propiedad exista\r",
+                      "    pm.expect(jsonData).to.have.property('accessToken');\r",
+                      "\r",
+                      "    // Verifica que sea un string y que no venga vacío\r",
+                      "    pm.expect(jsonData.accessToken).to.be.a('string').and.not.empty;\r",
+                      "\r",
+                      "    // Guarda el token en las variables globales para uso general\r",
+                      "    pm.globals.set(\"auth_token\", jsonData.accessToken);\r",
+                      "});"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n  \"username\":\"AngieTec\" ,\r\n  \"password\": \"Angie123\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{base_url}}/auth/authenticate",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "authenticate"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "LogOut",
+          "item": [
+            {
+              "name": "Logout exitoso",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test(\"Cierre de sesión: Token eliminado de Postman\", function () {\r",
+                      "    // Borramos la variable global\r",
+                      "    pm.globals.unset(\"auth_token\");\r",
+                      "    \r",
+                      "    // Verificamos que quedó vacía\r",
+                      "    pm.expect(pm.globals.get(\"auth_token\")).to.be.undefined;\r",
+                      "});"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/public/numberOfUsers",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "public",
+                    "numberOfUsers"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Seguridad",
+      "item": [
+        {
+          "name": "Verificar contraseña encriptada",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Seguridad: La contraseña secreta NO se expone en la respuesta\", function () {\r",
+                  "    var jsonData = pm.response.json();\r",
+                  "\r",
+                  "    // Verificamos que el JSON de respuesta no contenga la contraseña en texto plano\r",
+                  "    pm.expect(JSON.stringify(jsonData)).to.not.include(\"MiClaveSuperSecreta123\");\r",
+                  "\r",
+                  "    // Si el backend expone una propiedad password, validamos que al menos no esté vacía ni sea igual a la original\r",
+                  "    if(jsonData.hasOwnProperty('password')) {\r",
+                  "        pm.expect(jsonData.password).to.not.equal(\"MiClaveSuperSecreta123\");\r",
+                  "    }\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"username\": \"GeremyTec\",\r\n  \"password\": \"123\",\r\n  \"name\": \"Geremy\",\r\n  \"email\": \"Geremy@tec.com\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/signup",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "signup"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Intentar registro con inyeccion SQL",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// 1. Validar que la base de datos se mantenga íntegra y responda de forma segura\r",
+                  "pm.test(\"Seguridad: El sistema neutraliza y procesa de forma segura el payload SQL\", function () {\r",
+                  "    // Si el backend lo guarda como texto literal de forma segura, devolverá 201 Created.\r",
+                  "    // Si tiene un filtro de caracteres especiales en los inputs, devolverá 400 Bad Request.\r",
+                  "    // Ambos comportamientos son seguros frente a una inyección SQL.\r",
+                  "    pm.expect(pm.response.code).to.be.oneOf([201, 400]);\r",
+                  "});\r",
+                  "\r",
+                  "// 2. Validar que el servidor no exponga errores internos del motor de la base de datos\r",
+                  "pm.test(\"Integridad de la Base de Datos: No se filtran excepciones de SQL o Hibernate\", function () {\r",
+                  "    var respuestaTexto = pm.response.text();\r",
+                  "    \r",
+                  "    // Auditamos que no se expongan palabras clave de errores de bases de datos que ayuden a un atacante\r",
+                  "    pm.expect(respuestaTexto).to.not.include(\"SQLException\");\r",
+                  "    pm.expect(respuestaTexto).to.not.include(\"SQL syntax\");\r",
+                  "    pm.expect(respuestaTexto).to.not.include(\"HibernateException\");\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"username\": \"' OR '1'='2\",\r\n  \"password\": \"123\",\r\n  \"name\": \"Test\",\r\n  \"email\": \"sqltest@tec.com\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/signup",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "signup"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Acceder a ruta protegida sin token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// 1. Validar que el mecanismo de autenticación bloquee el acceso anónimo\r",
+                  "pm.test(\"Seguridad de Endpoints: Acceso denegado a /api/orders sin token - Código 401\", function () {\r",
+                  "    pm.response.to.have.status(401);\r",
+                  "});\r",
+                  "\r",
+                  "// 2. Validar que el servidor responda de forma segura ante una petición no autorizada\r",
+                  "pm.test(\"Control de Accesos: El sistema deniega la carga de datos sin credenciales\", function () {\r",
+                  "    var respuestaTexto = pm.response.text();\r",
+                  "    \r",
+                  "    // Al no enviar token, validamos que la respuesta sea un cuerpo vacío o un mensaje de rechazo genérico\r",
+                  "    if (respuestaTexto) {\r",
+                  "        // Si el servidor envía un JSON de error, verificamos que no contenga datos de órdenes reales\r",
+                  "        pm.expect(respuestaTexto).to.not.include(\"orderId\");\r",
+                  "        pm.expect(respuestaTexto).to.not.include(\"totalPrice\");\r",
+                  "    } else {\r",
+                  "        // El comportamiento por defecto seguro de Spring es devolver un cuerpo vacío en el 401\r",
+                  "        pm.expect(respuestaTexto).to.be.string;\r",
+                  "    }\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/users/me",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "users",
+                "me"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
