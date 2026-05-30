@@ -81,7 +81,6 @@ k6 run tc46-58/tc60-stress.js
 docker run --rm -i --network host grafana/k6 run - < tc46-58/tc60-stress.js
 ```
 
-**Busca el punto de quiebre**: la etapa donde `http_req_failed` empieza a crecer o `p95` se dispara.
 
 ---
 
