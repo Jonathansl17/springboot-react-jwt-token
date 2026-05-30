@@ -1,4 +1,4 @@
-# Guía de pruebas - Jonathan (TC46 a TC60)
+# Guía de pruebas -(TC46 a TC60)
 
 Abre **tres terminales** (o pestañas):
 
