@@ -46,7 +46,7 @@ El `DatabaseInitializer` crea automáticamente:
 
 ---
 
-## 4. Ejecutar TC31–TC45 con Postman (Jeremy)
+## 4. Ejecutar TC31–TC45 con Postman
 
 ### 4.1 Importar las colecciones
 
