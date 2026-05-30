@@ -110,11 +110,49 @@ docker run --rm -i --network host grafana/k6 run - < tc1-15/tc15-login.js
 
 ---
 
-## 6. Parte Dereck
+## 6. Ejecutar TC16–TC28 con Postman y TC29–TC30 con k6
 
-### 6.1 Pendiente de completar
+### 6.1 Importar la colección
 
-Esta sección queda reservada para que Dereck agregue su parte.
+1. Abre Postman.
+2. Ve a `File → Import`.
+3. Selecciona `tc16-30/TC16-30 Pedidos Dereck.postman_collection.json`.
+
+### 6.2 Ejecutar la colección
+
+1. En el panel izquierdo selecciona la colección importada.
+2. Haz click derecho sobre la colección.
+3. Selecciona **"Run collection"**.
+4. Haz click en **"Run"**.
+5. Revisa los resultados de las pruebas.
+
+### 6.3 TC29 - Rendimiento con pocos pedidos
+
+```bash
+k6 run tc16-30/tc29-listar-pedidos-pocos.js
+```
+
+O con Docker:
+
+```bash
+docker run --rm -i --network host grafana/k6 run - < tc16-30/tc29-listar-pedidos-pocos.js
+```
+
+> **Nota:** Simula 1 usuario realizando 10 iteraciones de `GET /api/users/me` con ~15 pedidos. Umbral: p95 < 1000 ms.
+
+### 6.4 TC30 - Rendimiento con muchos pedidos
+
+```bash
+k6 run tc16-30/tc30-listar-pedidos-muchos.js
+```
+
+O con Docker:
+
+```bash
+docker run --rm -i --network host grafana/k6 run - < tc16-30/tc30-listar-pedidos-muchos.js
+```
+
+> **Nota:** Simula 1 usuario realizando 10 iteraciones de `GET /api/users/me` con ~100 pedidos. Umbral: p95 < 1000 ms.
 
 ---
 
