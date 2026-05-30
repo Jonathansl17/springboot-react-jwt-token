@@ -1,75 +1,154 @@
-# Guía de pruebas 
+# Guía de pruebas
 
-Abre **tres terminales** (o pestañas):
+## 1. Preparar el entorno
 
-**Terminal 1 - Postgres:**
+Abre **tres terminales** o pestañas:
+
+### 1.1 Terminal 1 - Postgres
+
 ```bash
 cd ~/springboot-react-jwt-token
 docker compose up
 ```
 
-**Terminal 2 - Backend:**
+### 1.2 Terminal 2 - Backend
+
 ```bash
 cd ~/springboot-react-jwt-token/order-api
 ./mvnw spring-boot:run
 ```
+
 Queda escuchando en `http://localhost:8080`.
 
-**Terminal 3 - Frontend:**
+### 1.3 Terminal 3 - Frontend
+
 ```bash
 cd ~/springboot-react-jwt-token/order-ui
 pnpm start
 ```
+
 Queda escuchando en `http://localhost:3000`.
 
-### 3.2 Usuarios sembrados
+---
+
+## 2. Usuarios sembrados
 
 El `DatabaseInitializer` crea automáticamente:
 
-| Usuario | Password | Rol | Email |
-|---|---|---|---|
-| `admin` | `admin` | ADMIN | admin@mycompany.com |
-| `user` | `user` | USER | user@mycompany.com |
-
-### 3.3 Instalar herramientas
-
-- **Postman** (GUI): https://www.postman.com/downloads/
-- **k6** (carga):
-  ```bash
-  # Opción Docker (sin instalar nada):
-  docker pull grafana/k6
-  # Opción nativa Arch:
-  sudo pacman -S k6
-  ```
+| Usuario | Password | Rol   | Email                                             |
+| ------- | -------- | ----- | ------------------------------------------------- |
+| `admin` | `admin`  | ADMIN | [admin@mycompany.com](mailto:admin@mycompany.com) |
+| `user`  | `user`   | USER  | [user@mycompany.com](mailto:user@mycompany.com)   |
 
 ---
 
----
+## 3. Instalar herramientas
 
-## 4. Ejecutar TC39–TC43 con Postman
+### 3.1 Postman
 
-### 4.1 Importar las colecciones
+- **Postman** GUI: https://www.postman.com/downloads/
 
-1. Abre Postman → `File → Import`.
-2. Selecciona `tc39-43/TC-39.postman_collection.json`.
-3. Repite el proceso con `tc39-43/TC-43.postman_collection.json`.
-
-### 4.2 Ejecutar todas las colecciones
-
-1. Asegúrate de tener al menos un pedido creado en el sistema antes de correr.
-2. En el panel izquierdo selecciona la colección **TC-39** → click derecho → **"Run collection"** → click **"Run"**.
-3. Cuando termine, repite con la colección **TC-43** → click derecho → **"Run collection"** → click **"Run"**.
-
-
----
-
-## 5. TC-45 con k6 (rendimiento)
-
-### 5.1 TC-45 — Múltiples solicitudes simultáneas a pedidos
+### 3.2 k6
 
 ```bash
-k6 run tc45-load.js
-# o con docker:
+# Opción Docker, sin instalar nada:
+docker pull grafana/k6
+
+# Opción nativa Arch:
+sudo pacman -S k6
+```
+
+---
+
+## 4. Ejecutar TC1–TC13 con Postman
+
+### 4.1 Importar la colección
+
+1. Abre Postman.
+2. Ve a `File → Import`.
+3. Selecciona `tc1-15/TC1-13.postman_collection.json`.
+
+### 4.2 Ejecutar la colección
+
+1. En el panel izquierdo selecciona la colección importada.
+2. Haz click derecho sobre la colección.
+3. Selecciona **"Run collection"**.
+4. Haz click en **"Run"**.
+5. Revisa los resultados de las pruebas.
+
+---
+
+## 5. Ejecutar TC14 y TC15 con k6
+
+### 5.1 TC14 - Rendimiento
+
+```bash
+k6 run tc1-15/tc14-registro.js
+```
+
+O con Docker:
+
+```bash
+docker run --rm -i --network host grafana/k6 run - < tc1-15/tc14-registro.js
+```
+
+> **Nota:** Simula 30 usuarios durante 30 segundos realizando registros en `POST /auth/signup`.
+
+### 5.2 TC15 - Rendimiento
+
+```bash
+k6 run tc1-15/tc15-login.js
+```
+
+O con Docker:
+
+```bash
+docker run --rm -i --network host grafana/k6 run - < tc1-15/tc15-login.js
+```
+
+> **Nota:** Simula 30 usuarios durante 30 segundos realizando login en `POST /auth/authenticate`.
+
+---
+
+## 6. Parte Dereck
+
+### 6.1 Pendiente de completar
+
+Esta sección queda reservada para que Dereck agregue su parte.
+
+---
+
+## 7. Ejecutar TC39–TC43 con Postman
+
+### 7.1 Importar las colecciones
+
+1. Abre Postman.
+2. Ve a `File → Import`.
+3. Selecciona `tc39-43/TC-39.postman_collection.json`.
+4. Repite el proceso con `tc39-43/TC-43.postman_collection.json`.
+
+### 7.2 Ejecutar todas las colecciones
+
+1. Asegúrate de tener al menos un pedido creado en el sistema antes de correr.
+2. En el panel izquierdo selecciona la colección **TC-39**.
+3. Haz click derecho sobre la colección.
+4. Selecciona **"Run collection"**.
+5. Haz click en **"Run"**.
+6. Cuando termine, repite con la colección **TC-43**.
+
+---
+
+## 8. Ejecutar TC45 con k6
+
+### 8.1 TC45 - Rendimiento
+
+```bash
+k6 run tc31-45/tc45-load.js
+```
+
+O con Docker:
+
+```bash
 docker run --rm -i --network host grafana/k6 run - < tc31-45/tc45-load.js
 ```
 
@@ -77,45 +156,49 @@ docker run --rm -i --network host grafana/k6 run - < tc31-45/tc45-load.js
 
 ---
 
-## 6. Ejecutar TC46–TC58 con Postman
+## 9. Ejecutar TC46–TC58 con Postman
 
-### 6.1 Importar la colección
+### 9.1 Importar la colección
 
-1. Abre Postman → `File → Import`.
-2. Selecciona `tc46-58/TC46-58 Validaciones y Seguridad.postman_collection.json`.
-3. En el panel izquierdo aparece **"TC46-58 Validaciones y Seguridad"**.
+1. Abre Postman.
+2. Ve a `File → Import`.
+3. Selecciona `tc46-58/TC46-58 Validaciones y Seguridad.postman_collection.json`.
+4. En el panel izquierdo aparece **"TC46-58 Validaciones y Seguridad"**.
 
-### 6.2 Ejecutar toda la colección
+### 9.2 Ejecutar toda la colección
 
-1. Click derecho sobre la colección → **"Run collection"**.
-2. Asegúrate de que el orden sea el del archivo (SETUPs primero).
-3. Click **"Run"**.
-4. Postman ejecuta todo y muestra pass/fail por cada `pm.test(...)`.
-5. Exporta el resultado: botón **"Export Results"** → guarda como `.json` o capturas.
-
-
-
-## 7. TC59 y TC60 con k6 (rendimiento)
-
-### 7.1 TC59 — 50 usuarios concurrentes
-
-```bash
-k6 run tc46-58/tc59-load.js
-# o con docker:
-docker run --rm -i --network host grafana/k6 run - < tc46-58/tc59-load.js
-```
-
-
-### 7.2 TC60 — subida gradual hasta 200 usuarios simultáneos
-
-```bash
-k6 run tc46-58/tc60-stress.js
-# o con docker:
-docker run --rm -i --network host grafana/k6 run - < tc46-58/tc60-stress.js
-```
-
+1. Haz click derecho sobre la colección.
+2. Selecciona **"Run collection"**.
+3. Asegúrate de que el orden sea el del archivo, con los SETUPs primero.
+4. Haz click en **"Run"**.
+5. Postman ejecuta todo y muestra pass/fail por cada `pm.test(...)`.
+6. Exporta el resultado con **"Export Results"**.
+7. Guarda el resultado como `.json` o toma capturas.
 
 ---
 
+## 10. Ejecutar TC59 y TC60 con k6
 
+### 10.1 TC59 - 50 usuarios concurrentes
 
+```bash
+k6 run tc46-58/tc59-load.js
+```
+
+O con Docker:
+
+```bash
+docker run --rm -i --network host grafana/k6 run - < tc46-58/tc59-load.js
+```
+
+### 10.2 TC60 - Subida gradual hasta 200 usuarios simultáneos
+
+```bash
+k6 run tc46-58/tc60-stress.js
+```
+
+O con Docker:
+
+```bash
+docker run --rm -i --network host grafana/k6 run - < tc46-58/tc60-stress.js
+```
