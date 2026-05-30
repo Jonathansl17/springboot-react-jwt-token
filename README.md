@@ -46,13 +46,13 @@ El `DatabaseInitializer` crea automáticamente:
 
 ---
 
-## 4. Ejecutar TC31–TC45 con Postman
+## 4. Ejecutar TC39–TC43 con Postman
 
 ### 4.1 Importar las colecciones
 
 1. Abre Postman → `File → Import`.
-2. Selecciona `tc31-45/TC-39.postman_collection.json`.
-3. Repite el proceso con `tc31-45/TC-43.postman_collection.json`.
+2. Selecciona `tc39-43/TC-39.postman_collection.json`.
+3. Repite el proceso con `tc39-43/TC-43.postman_collection.json`.
 
 ### 4.2 Ejecutar todas las colecciones
 
@@ -68,7 +68,7 @@ El `DatabaseInitializer` crea automáticamente:
 ### 5.1 TC-45 — Múltiples solicitudes simultáneas a pedidos
 
 ```bash
-k6 run tc31-45/tc45-load.js
+k6 run tc45-load.js
 # o con docker:
 docker run --rm -i --network host grafana/k6 run - < tc31-45/tc45-load.js
 ```
