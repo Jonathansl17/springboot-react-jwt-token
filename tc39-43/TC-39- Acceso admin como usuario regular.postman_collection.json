@@ -1,0 +1,135 @@
+{
+  "info": {
+    "_postman_id": "e796de4e-72b9-4f98-a6a5-ccd4c32e3dcd",
+    "name": "TC-39: Acceso admin como usuario regular Copy",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "45623600",
+    "_collection_link": "https://go.postman.co/collection/45623600-e796de4e-72b9-4f98-a6a5-ccd4c32e3dcd?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "TC-39: Login como USER",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "pm.collectionVariables.clear();"
+            ],
+            "type": "text/javascript"
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Login como USER retorna status 200', function () {",
+              "    pm.expect(pm.response.code).to.eql(200);",
+              "});",
+              "",
+              "pm.test('Respuesta contiene accessToken', function () {",
+              "    pm.expect(pm.response.json()).to.have.property('accessToken');",
+              "});",
+              "",
+              "var token = pm.response.json().accessToken;",
+              "pm.collectionVariables.set('userToken', token);"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"username\": \"user\",\r\n    \"password\": \"user\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:8080/auth/authenticate",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "auth",
+            "authenticate"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "TC-39: Acceso a ruta admin como USER",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "var token = pm.collectionVariables.get('userToken');",
+              "pm.request.headers.add({ key: 'Authorization', value: 'Bearer ' + token });"
+            ],
+            "type": "text/javascript"
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Acceso a ruta admin como USER retorna 403 Forbidden', function () {",
+              "    pm.expect(pm.response.code).to.eql(403);",
+              "});",
+              "",
+              "pm.test('Respuesta contiene mensaje Forbidden', function () {",
+              "    pm.expect(pm.response.json().error).to.eql('Forbidden');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{userToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8080/api/users",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "api",
+            "users"
+          ]
+        }
+      },
+      "response": []
+    }
+  ],
+  "variable": [
+    {
+      "key": "userToken",
+      "value": ""
+    }
+  ]
+}

@@ -1,0 +1,324 @@
+{
+  "info": {
+    "_postman_id": "d611e576-2eb3-4bf6-8370-25f9785121f7",
+    "name": "TC-43: Inyeccion SQL en busqueda de pedidos Copy",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "45623600",
+    "_collection_link": "https://go.postman.co/collection/45623600-d611e576-2eb3-4bf6-8370-25f9785121f7?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "TC-43: Login como ADMIN",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "pm.collectionVariables.clear();"
+            ],
+            "type": "text/javascript"
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Login como ADMIN retorna status 200', function () {",
+              "    pm.expect(pm.response.code).to.eql(200);",
+              "});",
+              "",
+              "pm.test('Respuesta contiene accessToken', function () {",
+              "    pm.expect(pm.response.json()).to.have.property('accessToken');",
+              "});",
+              "",
+              "var token = pm.response.json().accessToken;",
+              "pm.collectionVariables.set('adminToken', token);"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"username\": \"admin\",\r\n    \"password\": \"admin\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:8080/auth/authenticate",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "auth",
+            "authenticate"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "TC-43: Inyeccion SQL OR 1=1",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "var token = pm.collectionVariables.get('adminToken');",
+              "pm.request.headers.add({ key: 'Authorization', value: 'Bearer ' + token });"
+            ],
+            "type": "text/javascript"
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Inyeccion OR 1=1 retorna status 200', function () {",
+              "    pm.expect(pm.response.code).to.eql(200);",
+              "});",
+              "",
+              "pm.test('Inyeccion OR 1=1 no expone registros de la base de datos', function () {",
+              "    pm.expect(pm.response.json()).to.be.an('array').that.is.empty;",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8080/api/orders?text=' OR '1'='1",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "api",
+            "orders"
+          ],
+          "query": [
+            {
+              "key": "text",
+              "value": "' OR '1'='1"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "TC-43: Inyeccion SQL DROP TABLE",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "var token = pm.collectionVariables.get('adminToken');",
+              "pm.request.headers.add({ key: 'Authorization', value: 'Bearer ' + token });"
+            ],
+            "type": "text/javascript"
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Inyeccion DROP TABLE retorna status 200', function () {",
+              "    pm.expect(pm.response.code).to.eql(200);",
+              "});",
+              "",
+              "pm.test('Inyeccion DROP TABLE no elimina datos de la base de datos', function () {",
+              "    pm.expect(pm.response.json()).to.be.an('array').that.is.empty;",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8080/api/orders?text='; DROP TABLE orders; --",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "api",
+            "orders"
+          ],
+          "query": [
+            {
+              "key": "text",
+              "value": "'; DROP TABLE orders; --"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "TC-43: Inyeccion SQL comillas dobles",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "var token = pm.collectionVariables.get('adminToken');",
+              "pm.request.headers.add({ key: 'Authorization', value: 'Bearer ' + token });"
+            ],
+            "type": "text/javascript"
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Inyeccion comillas dobles retorna status 200', function () {",
+              "    pm.expect(pm.response.code).to.eql(200);",
+              "});",
+              "",
+              "pm.test('Inyeccion comillas dobles no expone registros de la base de datos', function () {",
+              "    pm.expect(pm.response.json()).to.be.an('array').that.is.empty;",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8080/api/orders?text=\" OR \"\"=\"",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "api",
+            "orders"
+          ],
+          "query": [
+            {
+              "key": "text",
+              "value": "\" OR \"\"=\""
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "TC-43: Verificar pedidos intactos",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "var token = pm.collectionVariables.get('adminToken');",
+              "pm.request.headers.add({ key: 'Authorization', value: 'Bearer ' + token });"
+            ],
+            "type": "text/javascript"
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Verificar pedidos intactos retorna status 200', function () {",
+              "    pm.expect(pm.response.code).to.eql(200);",
+              "});",
+              "",
+              "pm.test('Los pedidos originales siguen existiendo tras los intentos de inyeccion', function () {",
+              "    pm.expect(pm.response.json()).to.be.an('array').that.is.not.empty;",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8080/api/orders",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "api",
+            "orders"
+          ]
+        }
+      },
+      "response": []
+    }
+  ],
+  "variable": [
+    {
+      "key": "adminToken",
+      "value": ""
+    }
+  ]
+}
