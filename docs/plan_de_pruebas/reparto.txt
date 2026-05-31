@@ -1,0 +1,125 @@
+REPARTO - PLAN DE PRUEBAS
+=========================
+
+--- SECCIONES DEL DOCUMENTO ---
+
+ANGIE
+- Portada, tabla de contenidos, indice de tablas
+- Bibliografia (min 3 fuentes, formato IEEE)
+- Formato general, revision de redaccion y coherencia
+
+JONATHAN
+- Introduccion (descripcion de las partes del documento)
+- Objetivos del plan (verbos infinitivos)
+
+DERECK
+- Definicion de tecnicas de pruebas (justificar las tecnicas elegidas)
+
+JEREMY
+- Estrategia de pruebas (planificar los 3 tipos de prueba diferentes)
+- Conclusiones
+
+
+
+--- 60 CASOS DE PRUEBA (15 por persona) ---
+
+ANGIE (15 casos) - Registro y Login
+
+  Funcionales:
+   1. Registro con datos validos
+   2. Registro con correo ya existente
+   3. Registro con campos vacios
+   4. Registro con contrasena corta
+   5. Login correcto
+   6. Login con contrasena incorrecta
+   7. Login con usuario inexistente
+   8. Login con campos vacios
+   9. Logout exitoso
+  10. Verificar token retornado en login
+
+  Seguridad:
+  11. Intentar registro con inyeccion SQL
+  12. Acceder a ruta protegida sin token
+  13. Verificar contrasena encriptada
+
+  Rendimiento:
+  14. Tiempo de respuesta de registro
+  15. Tiempo de respuesta de login
+
+DERECK (15 casos) - CRUD de Pedidos
+
+  Funcionales:
+  16. Crear pedido con datos completos
+  17. Crear pedido con campos vacios
+  18. Crear pedido sin autenticacion
+  19. Ver lista de pedidos propios
+  20. Ver detalle de un pedido propio
+  21. Intentar ver pedido de otro usuario
+  22. Editar pedido existente
+  23. Editar pedido con datos invalidos
+  24. Editar pedido de otro usuario
+  25. Eliminar pedido propio
+  26. Eliminar pedido de otro usuario
+
+  Seguridad:
+  27. Intentar XSS en descripcion de pedido
+  28. Enviar token expirado
+
+  Rendimiento:
+  29. Tiempo de respuesta listar pedidos (pocos)
+  30. Tiempo de respuesta listar pedidos (muchos)
+
+JEREMY (15 casos) - Funciones de Admin
+
+  Funcionales:
+  31. Admin: ver todos los usuarios
+  32. Admin: ver todos los pedidos
+  33. Admin: eliminar un usuario
+  34. Admin: eliminar pedido de otro usuario
+  35. Admin: editar pedido de otro usuario
+  36. Verificar paginacion de pedidos
+  37. Crear pedido con caracteres especiales
+  38. Mensajes de error claros al usuario
+
+  Seguridad:
+  39. Acceder a rutas de admin como usuario regular
+  40. Crear usuario admin desde registro publico
+  41. Verificar expiracion del token
+  42. Manipular token JWT manualmente
+  43. Inyeccion SQL en busqueda de pedidos
+
+  Rendimiento:
+  44. Carga de pagina principal
+  45. Multiples solicitudes simultaneas a pedidos
+
+JONATHAN (15 casos) - Validaciones y Seguridad
+
+  Funcionales:
+  46. Redireccion a login sin sesion activa
+  47. Usuario regular solo ve sus pedidos
+  48. Datos guardados correctamente al crear pedido
+  49. Editar perfil y verificar persistencia
+  50. Formato correcto de respuestas JSON
+  51. Codigos HTTP correctos (200,201,400,401,403,404)
+  52. Campos con espacios en blanco
+  53. Actualizar perfil con email ya en uso
+  54. Actualizar perfil con datos validos
+
+  Seguridad:
+  55. Verificar headers de seguridad HTTP
+  56. Metodos HTTP no permitidos (PUT en login, etc.)
+  57. Datos sensibles no expuestos en errores
+  58. No se puede registrar admin desde API publica
+
+  Rendimiento:
+  59. Prueba de carga: 50 usuarios concurrentes
+  60. Prueba de estres: pedidos en rafaga
+
+RESUMEN POR TIPO:
+- Funcionales:        39 casos
+- Seguridad:          13 casos
+- Rendimiento/Estres:  8 casos
+- TOTAL:              60 casos
+
+NOTA: Usar el formato dado por el profesor.
+Incluir valores validos e invalidos en cada caso.
