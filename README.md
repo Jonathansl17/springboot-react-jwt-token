@@ -181,13 +181,13 @@ docker run --rm -i --network host grafana/k6 run - < tc16-30/tc30-listar-pedidos
 ### 8.1 TC45 - Rendimiento
 
 ```bash
-k6 run tc31-45/tc45-load.js
+k6 run tc39-43/tc45-load.js
 ```
 
 O con Docker:
 
 ```bash
-docker run --rm -i --network host grafana/k6 run - < tc31-45/tc45-load.js
+docker run --rm -i --network host grafana/k6 run - < tc39-43/tc45-load.js
 ```
 
 > **Nota:** Esta prueba simula 50 usuarios virtuales creando pedidos simultáneamente durante 1 minuto.
