@@ -6,8 +6,8 @@ import { check } from "k6";
 // Umbral: p95 menor a 1000ms
 
 export const options = {
-  vus: 1,
-  iterations: 10,
+  vus: 5,
+  iterations: 100,
   thresholds: {
     http_req_duration: ["p(95)<1000"],
   },

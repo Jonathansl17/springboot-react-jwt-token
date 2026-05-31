@@ -1,5 +1,5 @@
 import http from 'k6/http';
-import { check, sleep } from 'k6';
+import { check } from 'k6';
 
 // TC-45: Multiples solicitudes simultaneas a pedidos
 // Objetivo: verificar que el sistema maneje correctamente 50 usuarios
@@ -8,7 +8,7 @@ import { check, sleep } from 'k6';
 
 export const options = {
   vus: 50,
-  duration: '1m',
+  duration: '3m',
   thresholds: {
     http_req_duration: ['p(95)<1000'],
     http_req_failed: ['rate<0.01'],
@@ -38,6 +38,4 @@ export default function () {
     }
   );
   check(order, { 'order creado 201': r => r.status === 201 });
-
-  sleep(1);
 }
