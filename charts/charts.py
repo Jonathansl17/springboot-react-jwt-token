@@ -122,69 +122,105 @@ plt.savefig(BASE + 'chart_response_times.png', dpi=150, bbox_inches='tight')
 plt.close()
 print('Saved: chart_response_times.png')
 
-# ── 2. Tasa de procesamiento ──────────────────────────────────────────────────
-max_rps = max(throughput)
-sorted_rps = sorted(throughput)
-CAP = sorted_rps[-2] * 1.20 if max_rps > sorted_rps[-2] * 3 else max_rps * 1.15
+# ── 2. Tasa de procesamiento — eje partido ────────────────────────────────────
 xi = np.arange(n)
+sorted_rps = sorted(throughput)
+bot_max  = sorted_rps[-2] * 1.28
+top_min  = max(throughput) * 0.93
+top_max  = max(throughput) * 1.09
 
-fig, ax = plt.subplots(figsize=(12, 6))
-bar_vals = [min(v, CAP) for v in throughput]
-ax.bar(xi, bar_vals, color=colors, edgecolor='white', width=0.6, zorder=3)
+fig, (ax_top, ax_bot) = plt.subplots(
+    2, 1, sharex=True, figsize=(12, 7),
+    gridspec_kw={'height_ratios': [1, 3.5], 'hspace': 0.05}
+)
 
+for ax in (ax_top, ax_bot):
+    ax.bar(xi, throughput, color=colors, edgecolor='white', width=0.6, zorder=3)
+    ax.yaxis.grid(True, linestyle='--', alpha=0.35)
+    ax.set_axisbelow(True)
+
+ax_bot.set_ylim(0, bot_max)
+ax_top.set_ylim(top_min, top_max)
+
+ax_top.spines['bottom'].set_visible(False)
+ax_bot.spines['top'].set_visible(False)
+ax_top.tick_params(bottom=False)
+
+# Marcas de corte diagonales
+d = 0.013
+kw = dict(color='#333333', clip_on=False, linewidth=1.3)
+ax_top.plot([-d, +d], [-d*2.5, +d*2.5], transform=ax_top.transAxes, **kw)
+ax_top.plot([1-d, 1+d], [-d*2.5, +d*2.5], transform=ax_top.transAxes, **kw)
+ax_bot.plot([-d, +d], [1-d*2.5, 1+d*2.5], transform=ax_bot.transAxes, **kw)
+ax_bot.plot([1-d, 1+d], [1-d*2.5, 1+d*2.5], transform=ax_bot.transAxes, **kw)
+
+# Etiquetas
 for i, val in enumerate(throughput):
-    if val > CAP:
-        ax.bar([i], [CAP], color=colors[i], edgecolor='white', width=0.6,
-               hatch='////', alpha=0.4, zorder=4)
-        ax.text(i, bar_vals[i] - (CAP * 0.05), f'{val:,.0f} pet/s',
-                ha='center', va='top', fontsize=9, fontweight='bold', color='white')
+    if val > bot_max:
+        ax_top.text(i, val + (top_max - top_min) * 0.03, f'{val:,.0f}',
+                    ha='center', va='bottom', fontsize=9, fontweight='bold', color='#CC2200')
     else:
-        ax.text(i, val + CAP * 0.01, f'{val:.1f}',
-                ha='center', va='bottom', fontsize=8, fontweight='bold', color='#333333')
+        ax_bot.text(i, val + bot_max * 0.01, f'{val:.1f}',
+                    ha='center', va='bottom', fontsize=8, fontweight='bold', color='#333333')
 
-ax.set_ylim(0, CAP * 1.12)
-ax.set_title('Tasa de Procesamiento (peticiones por segundo)', fontsize=13, fontweight='bold', pad=12)
-ax.set_ylabel('Peticiones / segundo', fontsize=11)
-ax.set_xticks(xi)
-ax.set_xticklabels(short, fontsize=9)
-ax.yaxis.grid(True, linestyle='--', alpha=0.35)
-ax.set_axisbelow(True)
-ax.legend(handles=legend_patches, fontsize=9, title='Tipo de prueba',
-          title_fontsize=9, loc='upper left')
-plt.tight_layout()
+fig.suptitle('Tasa de Procesamiento (peticiones por segundo)', fontsize=13, fontweight='bold', y=0.98)
+ax_bot.set_ylabel('Peticiones / segundo', fontsize=11)
+ax_bot.set_xticks(xi)
+ax_bot.set_xticklabels(short, fontsize=9)
+ax_bot.legend(handles=legend_patches, fontsize=9, title='Tipo de prueba',
+              title_fontsize=9, loc='upper left')
 plt.savefig(BASE + 'chart_throughput.png', dpi=150, bbox_inches='tight')
 plt.close()
 print('Saved: chart_throughput.png')
 
-# ── 3. Total de verificaciones ────────────────────────────────────────────────
-max_checks = max(checks_total)
+# ── 3. Total de verificaciones — eje partido ─────────────────────────────────
 sorted_checks = sorted(checks_total)
-CAP_H = sorted_checks[-2] * 1.20 if max_checks > sorted_checks[-2] * 3 else max_checks * 1.15
+left_max  = sorted_checks[-2] * 1.28
+right_min = max(checks_total) * 0.93
+right_max = max(checks_total) * 1.09
 
-fig, ax = plt.subplots(figsize=(12, 7))
-bar_vals_h = [min(v, CAP_H) for v in checks_total]
-ax.barh(y, bar_vals_h, color=colors, edgecolor='white', height=0.55, zorder=3)
+fig, (ax_left, ax_right) = plt.subplots(
+    1, 2, sharey=True, figsize=(14, 7),
+    gridspec_kw={'width_ratios': [3.5, 1], 'wspace': 0.05}
+)
 
+for ax in (ax_left, ax_right):
+    ax.barh(y, checks_total, color=colors, edgecolor='white', height=0.55, zorder=3)
+    ax.xaxis.grid(True, linestyle='--', alpha=0.35)
+    ax.set_axisbelow(True)
+
+ax_left.set_xlim(0, left_max)
+ax_right.set_xlim(right_min, right_max)
+
+ax_left.spines['right'].set_visible(False)
+ax_right.spines['left'].set_visible(False)
+ax_right.tick_params(left=False)
+
+# Marcas de corte diagonales
+d = 0.013
+kw = dict(color='#333333', clip_on=False, linewidth=1.3)
+ax_left.plot([1-d*0.4, 1+d*0.4], [-d, +d], transform=ax_left.transAxes, **kw)
+ax_left.plot([1-d*0.4, 1+d*0.4], [1-d, 1+d], transform=ax_left.transAxes, **kw)
+ax_right.plot([-d*0.4, +d*0.4], [-d, +d], transform=ax_right.transAxes, **kw)
+ax_right.plot([-d*0.4, +d*0.4], [1-d, 1+d], transform=ax_right.transAxes, **kw)
+
+# Etiquetas
 for i, val in enumerate(checks_total):
-    if val > CAP_H:
-        ax.barh([i], [CAP_H], color=colors[i], edgecolor='white',
-                height=0.55, hatch='////', alpha=0.4, zorder=4)
-        ax.text(CAP_H - 80, i, f'{val:,}',
-                va='center', ha='right', fontsize=9, color='white', fontweight='bold')
+    if val > left_max:
+        ax_right.text(val + (right_max - right_min) * 0.02, i, f'{val:,}',
+                      va='center', ha='left', fontsize=8, color='#CC2200', fontweight='bold')
     else:
-        ax.text(val + CAP_H * 0.01, i, f'{val:,}',
-                va='center', ha='left', fontsize=8, color='#1A6B35', fontweight='bold')
+        ax_left.text(val + left_max * 0.01, i, f'{val:,}',
+                     va='center', ha='left', fontsize=8, color='#1A6B35', fontweight='bold')
 
-ax.set_xlim(0, CAP_H * 1.12)
-ax.set_title('Total de Verificaciones Ejecutadas — Todas con 100% de Éxito', fontsize=13, fontweight='bold', pad=12)
-ax.set_xlabel('Cantidad de verificaciones', fontsize=11)
-ax.set_yticks(y)
-ax.set_yticklabels(short, fontsize=9)
-ax.xaxis.grid(True, linestyle='--', alpha=0.35)
-ax.set_axisbelow(True)
-ax.xaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f'{int(x):,}'))
-ax.legend(handles=legend_patches, fontsize=9, title='Tipo de prueba',
-          title_fontsize=9, loc='lower right')
+fig.suptitle('Total de Verificaciones Ejecutadas. Todas con 100% de Éxito.', fontsize=13, fontweight='bold')
+ax_left.set_xlabel('Cantidad de verificaciones', fontsize=11)
+ax_left.set_yticks(y)
+ax_left.set_yticklabels(short, fontsize=9)
+ax_left.xaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f'{int(x):,}'))
+ax_right.xaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f'{int(x):,}'))
+ax_left.legend(handles=legend_patches, fontsize=9, title='Tipo de prueba',
+               title_fontsize=9, loc='lower right')
 plt.tight_layout()
 plt.savefig(BASE + 'chart_checks.png', dpi=150, bbox_inches='tight')
 plt.close()

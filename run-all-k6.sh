@@ -37,13 +37,7 @@ for entry in "${TESTS[@]}"; do
   set -e
 
   if [ -f "$TMP_SUMMARY" ]; then
-    python3 - <<PYEOF >> "$RESULTS"
-import json
-with open('$TMP_SUMMARY') as f:
-    d = json.load(f)
-d['_tc'] = '$tc'
-print(json.dumps(d))
-PYEOF
+    python3 "$ROOT/k6_append.py" "$TMP_SUMMARY" "$tc" >> "$RESULTS"
   fi
 
   if [ $K6_EXIT -eq 0 ]; then
@@ -68,7 +62,7 @@ echo "=========================================="
 echo ""
 echo "Generando charts y reporte..."
 sudo -u jony python3 /home/jony/springboot-react-jwt-token/charts/charts.py && \
-  sudo -u jony node /home/jony/springboot-react-jwt-token/charts/generate_report.js && \
+  (cd /home/jony/springboot-react-jwt-token/charts && sudo -u jony node generate_report.js) && \
   echo "Reporte generado: charts/reporte_rendimiento.docx"
 
 [ $FAIL -eq 0 ]
