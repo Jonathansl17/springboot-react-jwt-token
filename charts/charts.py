@@ -1,76 +1,73 @@
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+import matplotlib.ticker as ticker
 import numpy as np
 
-tests = [
-    "tc14\nregistro",
-    "tc15\nlogin",
-    "tc29\npedidos-pocos",
-    "tc30\npedidos-muchos",
-    "tc45\nload",
-    "tc59\nload-me",
-    "tc60\nstress",
-]
+tests_short = ["TC14\nRegistro", "TC15\nLogin", "TC29\nPedidos\nPocos",
+               "TC30\nPedidos\nMuchos", "TC45\nLoad", "TC59\nLoad-Me", "TC60\nStress"]
 
 avg_ms     = [231.95, 103.48, 17.59, 10.94, 168.67, 125.53, 22.96]
 p90_ms     = [229.09, 115.64, 75.55,  3.44, 340.72, 246.35, 49.68]
 p95_ms     = [248.82, 119.11, 84.47, 50.69, 381.78, 303.90, 64.40]
 throughput = [24.19, 27.05, 55.74, 88.60, 74.63, 79.20, 3784.68]
-checks_pct = [100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0]
+checks_total = [750, 840, 20, 20, 4496, 4836, 454525]
 
-x = np.arange(len(tests))
+x = np.arange(len(tests_short))
 w = 0.26
+BASE = '/home/jony/springboot-react-jwt-token/charts/'
 
-fig, axes = plt.subplots(1, 3, figsize=(18, 6))
-fig.suptitle("Reporte de Pruebas de Rendimiento — k6", fontsize=15, fontweight='bold', y=1.02)
-
-COLORS = {
-    'avg': '#4C72B0',
-    'p90': '#DD8452',
-    'p95': '#55A868',
-    'thr': '#C44E52',
-    'chk': '#8172B2',
-}
-
-# ── 1. Response times ────────────────────────────────────────────────────────
-ax1 = axes[0]
-ax1.bar(x - w, avg_ms, w, label='avg', color=COLORS['avg'])
-ax1.bar(x,     p90_ms, w, label='p90', color=COLORS['p90'])
-ax1.bar(x + w, p95_ms, w, label='p95', color=COLORS['p95'])
-ax1.set_title("Tiempos de Respuesta (ms)", fontsize=12, fontweight='bold')
-ax1.set_ylabel("Tiempo (ms)")
-ax1.set_xticks(x)
-ax1.set_xticklabels(tests, fontsize=8)
-ax1.legend(fontsize=9)
-ax1.axhline(1000, color='red', linestyle='--', linewidth=1, alpha=0.7)
-ax1.yaxis.grid(True, linestyle='--', alpha=0.5)
-ax1.set_axisbelow(True)
-
-# ── 2. Throughput ────────────────────────────────────────────────────────────
-ax2 = axes[1]
-ax2.bar(x, throughput, color=COLORS['thr'], edgecolor='white')
-ax2.set_title("Throughput — Peticiones por Segundo", fontsize=12, fontweight='bold')
-ax2.set_ylabel("req/s")
-ax2.set_xticks(x)
-ax2.set_xticklabels(tests, fontsize=8)
-ax2.set_yscale('log')
-ax2.yaxis.grid(True, linestyle='--', alpha=0.5, which='both')
-ax2.set_axisbelow(True)
-
-# ── 3. Checks passed % ───────────────────────────────────────────────────────
-ax3 = axes[2]
-ax3.bar(x, checks_pct, color=COLORS['chk'], edgecolor='white')
-ax3.set_title("Checks Exitosos (%)", fontsize=12, fontweight='bold')
-ax3.set_ylabel("%")
-ax3.set_ylim(0, 115)
-ax3.set_xticks(x)
-ax3.set_xticklabels(tests, fontsize=8)
-ax3.axhline(100, color='green', linestyle='--', linewidth=1.2, alpha=0.7)
-ax3.yaxis.grid(True, linestyle='--', alpha=0.5)
-ax3.set_axisbelow(True)
-
+# ── 1. Response times → Horizontal grouped bar ───────────────────────────────
+fig, ax = plt.subplots(figsize=(10, 6))
+y = np.arange(len(tests_short))
+ax.barh(y + w, avg_ms, w, label='Promedio',     color='#4C72B0', alpha=0.88)
+ax.barh(y,     p90_ms, w, label='Percentil 90', color='#DD8452', alpha=0.88)
+ax.barh(y - w, p95_ms, w, label='Percentil 95', color='#55A868', alpha=0.88)
+ax.set_title("Tiempos de Respuesta por Caso de Prueba", fontsize=13, fontweight='bold')
+ax.set_xlabel("Tiempo (ms)")
+ax.set_yticks(y)
+ax.set_yticklabels(tests_short, fontsize=8)
+ax.set_xlim(0, max(p95_ms) * 1.15)
+ax.legend(fontsize=9, loc='lower right')
+ax.xaxis.grid(True, linestyle='--', alpha=0.5)
+ax.set_axisbelow(True)
 plt.tight_layout()
-out = '/home/jony/springboot-react-jwt-token/charts/charts.png'
-plt.savefig(out, dpi=150, bbox_inches='tight')
-print(f"Saved: {out}")
+plt.savefig(BASE + 'chart_response_times.png', dpi=150, bbox_inches='tight')
+plt.close()
+print("Saved: chart_response_times.png")
+
+# ── 2. Throughput → Line + area (log scale) ───────────────────────────────────
+fig, ax = plt.subplots(figsize=(10, 6))
+xi = np.arange(len(tests_short))
+ax.plot(xi, throughput, color='#C44E52', linewidth=2.5, marker='o',
+        markersize=8, markerfacecolor='white', markeredgewidth=2, zorder=3)
+ax.fill_between(xi, throughput, alpha=0.18, color='#C44E52')
+ax.set_title("Throughput — Peticiones por Segundo", fontsize=13, fontweight='bold')
+ax.set_ylabel("req/s (escala logarítmica)")
+ax.set_xticks(xi)
+ax.set_xticklabels(tests_short, fontsize=8)
+ax.set_yscale('log')
+ax.yaxis.grid(True, linestyle='--', alpha=0.5, which='both')
+ax.set_axisbelow(True)
+plt.tight_layout()
+plt.savefig(BASE + 'chart_throughput.png', dpi=150, bbox_inches='tight')
+plt.close()
+print("Saved: chart_throughput.png")
+
+# ── 3. Total checks → Lollipop chart ─────────────────────────────────────────
+fig, ax = plt.subplots(figsize=(10, 6))
+colors = ['#8172B2'] * len(tests_short)
+for i, (val, lbl) in enumerate(zip(checks_total, tests_short)):
+    ax.plot([0, val], [i, i], color='#AAAAAA', linewidth=1.5, zorder=1)
+    ax.scatter(val, i, color=colors[i], s=120, zorder=2)
+ax.set_title("Total de Verificaciones Ejecutadas por Caso de Prueba", fontsize=13, fontweight='bold')
+ax.set_xlabel("Cantidad de checks")
+ax.set_yticks(range(len(tests_short)))
+ax.set_yticklabels(tests_short, fontsize=8)
+ax.set_xscale('log')
+ax.xaxis.grid(True, linestyle='--', alpha=0.5, which='both')
+ax.set_axisbelow(True)
+plt.tight_layout()
+plt.savefig(BASE + 'chart_checks.png', dpi=150, bbox_inches='tight')
+plt.close()
+print("Saved: chart_checks.png")
