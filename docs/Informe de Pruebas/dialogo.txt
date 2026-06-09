@@ -1,0 +1,266 @@
+================================================================================
+  GUION DE PRESENTACIÓN — INFORME DE PRUEBAS
+  Aseguramiento de la Calidad del Software · Sistema de gestión de pedidos
+  Duración objetivo: ~12 minutos · 4 expositores
+================================================================================
+
+ORDEN DE PARTICIPACIÓN (cada quien habla su bloque completo, sin intercalar):
+
+  1. JONATHAN ......... Slides 1–5  · Portada + Introducción + Pruebas Funcionales
+  2. ANGIE ............ Slides 6–7  · Pruebas de Seguridad
+  3. JEREMY ........... Slides 8–10 · Pruebas de Rendimiento
+  4. DERECK ........... Slides 11–14· Defectos, Evaluación, Recomendaciones, Cierre
+
+
+================================================================================
+  1 · JONATHAN          [00:00 – 03:40]   Slides 1 a 5
+================================================================================
+
+--- SLIDE 1 · PORTADA --------------------------------------------------- [00:00]
+
+Muy buenos días a todos. Bienvenidos a la presentación del Informe de Pruebas
+del sistema de gestión de pedidos, elaborado para el curso de Aseguramiento de
+la Calidad del Software. Mi nombre es Jonathan Sancho, y hoy expongo junto a mis
+compañeros Angie Aguilar, Jeremy Montero y Dereck Cuadra.
+
+A lo largo de esta presentación vamos a mostrarles, con evidencia objetiva, qué
+tan preparado está este sistema para ser entregado. Yo voy a iniciar con la
+introducción y con los resultados de las pruebas funcionales; luego mis
+compañeros continuarán con seguridad, rendimiento y la evaluación final.
+
+--- SLIDE 2 · INTRODUCCIÓN ---------------------------------------------- [00:35]
+
+Comencemos por el contexto. Este informe no describe la estrategia ni los casos
+que diseñamos: eso ya estaba en el plan de pruebas. Aquí nos enfocamos
+exclusivamente en los hallazgos obtenidos durante la ejecución, es decir, en qué
+encontramos cuando realmente pusimos a prueba el sistema.
+
+Para ello sometimos la aplicación a tres tipos de prueba: funcionales, que
+verifican que los flujos principales se comporten como se espera; de seguridad,
+que exponen las vulnerabilidades de la aplicación; y de rendimiento, que analizan
+su estabilidad bajo carga concurrente. En total ejecutamos sesenta casos de
+prueba, apoyándonos en dos herramientas: k6 para la carga y Postman para la API.
+
+Un detalle importante: todas las pruebas se hicieron en un entorno local de
+desarrollo, así que los resultados de rendimiento podrían variar en condiciones
+reales de producción.
+
+--- SLIDE 3 · ALCANCE Y METODOLOGÍA ------------------------------------- [01:20]
+
+Esos sesenta casos se reparten así: treinta y ocho pruebas funcionales sobre los
+cuatro módulos principales, catorce pruebas de seguridad en tres categorías, y
+siete escenarios de rendimiento con k6, que van desde baja concurrencia hasta
+estrés con doscientos usuarios virtuales.
+
+Para todo el proceso definimos un criterio de aceptación claro: un mínimo del
+ochenta por ciento de aprobación por módulo. Ese ochenta por ciento es la vara
+con la que vamos a medir cada resultado que verán hoy. Toda la evidencia se
+recopiló de forma objetiva con Postman y k6.
+
+--- SLIDE 4 · FUNCIONALES: APROBACIÓN POR MÓDULO ------------------------ [01:55]
+
+Entremos ya en mi parte principal: las pruebas funcionales. Aquí evaluamos
+treinta y ocho casos sobre cuatro módulos, y el resultado global fue una tasa de
+aprobación del ochenta y uno coma seis por ciento. Cumplimos el umbral, pero
+fíjense en el detalle por módulo, porque ahí está lo interesante.
+
+Validaciones generales obtuvo un cien por ciento; Registro y Login un noventa por
+ciento; y Funciones de Administrador un ochenta y cinco. Esos tres aprueban sin
+problema. Pero miren la última fila: CRUD de Pedidos quedó en apenas cincuenta y
+cuatro coma cinco por ciento, muy por debajo del umbral. Reprobado.
+
+¿Por qué? Porque varias operaciones existen en el backend, pero nunca fueron
+expuestas en el frontend del usuario regular. La funcionalidad está, pero el
+usuario no puede llegar a ella desde la interfaz.
+
+--- SLIDE 5 · FUNCIONALES: CONCLUSIONES --------------------------------- [02:50]
+
+Resumiendo lo funcional en tres puntos. Primero: la base del sistema es sólida.
+Autenticación, administración y validaciones están bien implementadas y superan
+el umbral con holgura.
+
+Segundo, y es el problema central: el módulo de CRUD de Pedidos requiere atención
+prioritaria. Más de la mitad de sus casos falló por esa desconexión entre el
+backend y el frontend que acabo de mencionar.
+
+Y tercero, un tema de usabilidad: en los casos TC-33 y TC-34 detectamos que el
+sistema no pide confirmación antes de acciones destructivas, como eliminar un
+usuario o un pedido. Funciona, sí, pero abre la puerta a borrados accidentales.
+
+Con esto cierro la parte funcional. Le dejo la palabra a Angie, que nos va a
+contar cómo se comportó el sistema en seguridad.
+
+
+================================================================================
+  2 · ANGIE             [03:40 – 06:10]   Slides 6 a 7
+================================================================================
+
+--- SLIDE 6 · SEGURIDAD: APROBACIÓN POR CATEGORÍA ----------------------- [03:40]
+
+Gracias, Jonathan. Buenos días a todos. Yo voy a presentar los resultados de las
+pruebas de seguridad. Ejecutamos catorce casos repartidos en tres categorías, y
+la aprobación global fue del ochenta y cinco coma siete por ciento, así que el
+sistema supera nuestro criterio del ochenta por ciento.
+
+Viéndolo por categoría: el control de acceso y autenticación obtuvo un cien por
+ciento, siete de siete; la configuración de seguridad HTTP, un setenta y cinco
+por ciento, que aprueba al contar el caso con observación; y la protección contra
+inyección y XSS quedó en sesenta y seis coma siete por ciento. Esa última es la
+única categoría reprobada, y reprueba por un solo defecto, pero un defecto muy
+grave que les voy a explicar ahora.
+
+--- SLIDE 7 · SEGURIDAD: HALLAZGO CRÍTICO (XSS) ------------------------- [04:35]
+
+Este es el hallazgo más importante de todo el informe: una vulnerabilidad de XSS
+almacenado, identificada en el caso TC-27. La clasificamos como Critical y es
+bloqueante.
+
+¿Qué significa en términos prácticos? El sistema permite guardar etiquetas de
+script en la descripción de un pedido sin sanitizarlas. Ese código queda
+almacenado en la base de datos y se ejecuta en el navegador de cualquier otro
+usuario que vea ese pedido. Es decir, un atacante puede afectar a todos los demás
+usuarios del sistema. OWASP la reconoce como uno de los riesgos más críticos en
+aplicaciones web, así que su corrección es inmediata e innegociable antes de
+cualquier despliegue.
+
+Ahora bien, no todo es negativo, y quiero ser justa con el sistema. Por el lado
+positivo: la autenticación, los tokens JWT y el control de acceso por roles
+funcionan correctamente, y el sistema resistió todos los intentos de inyección
+SQL gracias al uso de consultas parametrizadas con JPA e Hibernate.
+
+Quedan dos puntos menores por mejorar: los errores 404 exponen el nombre del
+paquete interno de Java, lo que ayuda a un atacante a reconocer la tecnología; y
+faltan algunos headers de seguridad recomendados, como Content-Security-Policy y
+Strict-Transport-Security.
+
+En resumen: la seguridad es buena en lo fundamental, pero ese XSS es la prioridad
+número uno. Con esto termino mi parte y le paso la palabra a Jeremy, con
+rendimiento.
+
+
+================================================================================
+  3 · JEREMY            [06:10 – 09:00]   Slides 8 a 10
+================================================================================
+
+--- SLIDE 8 · RENDIMIENTO: ESCENARIOS ----------------------------------- [06:10]
+
+Muchas gracias, Angie. Buenos días. Me toca hablarles de las pruebas de
+rendimiento, que ejecutamos con la herramienta k6. Diseñamos siete escenarios que
+cubren las operaciones críticas del sistema: registro, login, consulta de pedidos
+y flujos combinados de carga y de estrés.
+
+En la tabla pueden ver la configuración de cada uno. Lo primero que quiero
+destacar es la última columna: los siete escenarios aprobaron, con un cien por
+ciento de éxito en sus verificaciones. No hubo una sola falla.
+
+Nuestro límite de respuesta propuesto fue de cuatrocientos milisegundos, y la
+mayoría de los escenarios se mantuvo por debajo. Solo dos lo superaron, los que
+ven en rojo: TC-14 y TC-59. Pero ojo, eso ocurrió bajo carga sostenida sin pausa
+entre peticiones, así que son hallazgos documentados, no fallos funcionales.
+
+--- SLIDE 9 · RENDIMIENTO: TIEMPOS DE RESPUESTA ------------------------- [07:10]
+
+Veamos esos tiempos con más detalle. Para interpretarlos usamos percentiles: el
+percentil noventa y cinco, o P95, representa el tiempo máximo que experimentó el
+noventa y cinco por ciento de los usuarios. Es una medida mucho más realista que
+el promedio simple.
+
+TC-14, el registro masivo, alcanzó un P95 de ochocientos cuarenta y dos
+milisegundos. ¿La causa? El costo del cifrado bcrypt con treinta usuarios
+concurrentes sin pausa; es un costo esperado de seguridad. TC-59, el flujo de
+login más perfil, llegó a mil cuarenta milisegundos, el caso más alto, lo que nos
+indica saturación del endpoint de autenticación bajo carga sostenida.
+
+En el otro extremo, las consultas de pedidos, TC-29 y TC-30, respondieron en
+menos de sesenta milisegundos. Y lo más llamativo: el escenario de estrés TC-60,
+con doscientos usuarios virtuales, mantuvo un P95 de apenas sesenta y tres
+milisegundos, gracias a lo ligero que es ese endpoint. Solo dos de los siete
+escenarios superaron el umbral.
+
+--- SLIDE 10 · RENDIMIENTO: CONCLUSIONES -------------------------------- [08:05]
+
+Y este es el dato que mejor resume el rendimiento del sistema: en el escenario de
+estrés, con doscientos usuarios virtuales en rampa durante dos minutos, el sistema
+procesó tres mil ochocientas cuarenta y tres peticiones por segundo, con
+cuatrocientos sesenta y un mil checks y cero errores.
+
+En conclusión: el sistema respondió correctamente en todos los niveles de carga,
+con un cien por ciento de éxito y sin ninguna caída del servicio. Las lecturas de
+pedidos fueron excepcionalmente rápidas, por debajo de sesenta milisegundos. Los
+únicos dos hallazgos son de severidad Major, por tiempos elevados bajo carga
+sostenida, pero no comprometen la funcionalidad.
+
+Dicho de otra forma, en rendimiento el sistema es robusto. Con esto cierro y le
+dejo la palabra a Dereck, que nos va a dar la visión global de los defectos y la
+evaluación final.
+
+
+================================================================================
+  4 · DERECK            [09:00 – 12:00]   Slides 11 a 14
+================================================================================
+
+--- SLIDE 11 · DEFECTOS ENCONTRADOS ------------------------------------- [09:00]
+
+Gracias, Jeremy. Buenos días a todos. A mí me corresponde juntar todas las piezas:
+los defectos, la evaluación global y las recomendaciones del equipo.
+
+En total identificamos once defectos, clasificados con la escala de severidad de
+SonarQube. Cinco son Blocker, todos concentrados en la ausencia de las operaciones
+de edición y eliminación de pedidos en la interfaz del usuario, justo el problema
+que mencionó Jonathan. Uno es Critical: el XSS almacenado que explicó Angie.
+Cuatro son Major: los dos de rendimiento que vimos, la falta de paginación en la
+vista del administrador, y la exposición de información interna en los errores. Y
+uno es Minor: el sistema acepta contraseñas de menos de seis caracteres.
+
+El módulo que más defectos concentra es, sin sorpresa, el de CRUD de pedidos, con
+siete entre fallas y observaciones.
+
+--- SLIDE 12 · EVALUACIÓN Y CURSO DE ACCIÓN ----------------------------- [10:00]
+
+¿Qué hacemos con todo esto? El sistema cumple el ochenta por ciento en las tres
+categorías, pero ese número global oculta diferencias reales de calidad. Por eso
+proponemos un curso de acción en tres niveles de prioridad.
+
+Prioridad alta, lo que bloquea la entrega: corregir el XSS almacenado, aplicando
+sanitización en el backend y escape en el frontend; y habilitar en la interfaz del
+usuario las operaciones de edición y eliminación de pedidos, que ya existen en el
+backend. Ambas son bloqueantes y deben resolverse antes de cualquier entrega a
+producción.
+
+Prioridad media: implementar paginación en la vista del administrador, ocultar la
+información interna en los errores 404, y revisar el rendimiento del flujo de
+autenticación bajo carga.
+
+Y prioridad baja: validar la longitud mínima de la contraseña, agregar diálogos de
+confirmación en las acciones destructivas, e incluir los headers de seguridad
+recomendados.
+
+--- SLIDE 13 · RECOMENDACIONES ------------------------------------------ [11:00]
+
+Más allá de los defectos, el equipo deja tres recomendaciones para futuros ciclos.
+
+Sobre el proceso: confirmamos que combinar pruebas manuales y automatizadas da una
+cobertura mucho más amplia; las manuales validan usabilidad y navegación, y las
+automatizadas, los escenarios repetitivos y de carga.
+
+Sobre las herramientas: Postman y k6 funcionaron muy bien, pero recomendamos
+sumar un framework como Selenium o Cypress para automatizar los casos funcionales
+que hoy hicimos a mano.
+
+Y sobre el alcance: en esta ocasión no cubrimos usabilidad ni compatibilidad entre
+navegadores, así que sugerimos incluirlas en evaluaciones futuras.
+
+--- SLIDE 14 · CIERRE --------------------------------------------------- [11:35]
+
+Para cerrar. El sistema cumple los umbrales de calidad en las tres categorías, y
+demostró ser sólido en autenticación y en rendimiento. Pero antes de llevarlo a
+producción hay dos correcciones que no son negociables: la vulnerabilidad de XSS
+almacenado y la gestión de pedidos desde la interfaz del usuario. Resueltas esas
+dos, el sistema está listo para entregarse.
+
+Con esto cerramos nuestra presentación. Agradecemos su atención y quedamos
+atentos a cualquier pregunta. Muchas gracias.
+
+================================================================================
+  FIN DEL GUION
+================================================================================
